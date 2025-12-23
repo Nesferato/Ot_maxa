@@ -1,0 +1,900 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "АРМ Планирования работ";
+}
+
+<!-- Подключаем необходимые стили -->
+<link href='https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.css' rel='stylesheet'>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+    /* Стили для диаграммы Ганта */
+    .gantt-container {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        padding: 20px;
+        max-height: 300px;
+        margin-bottom: 30px;
+        border: 1px solid #e0e0e0;
+    }
+
+    .gantt-controls {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+        border: 1px solid #dee2e6;
+        
+    }
+
+    .task-card {
+        transition: transform 0.2s;
+        cursor: pointer;
+    }
+
+        .task-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+    .progress-bar-gantt {
+        height: 8px;
+        border-radius: 4px;
+        overflow: hidden;
+        
+    }
+
+    .status-badge {
+        font-size: 0.75rem;
+        padding: 3px 10px;
+        border-radius: 20px;
+    }
+
+    .gantt-legend {
+        font-size: 0.85rem;
+        margin-top: 15px;
+    }
+
+    /* Анимации */
+   
+
+    /* Стили для баров Ганта */
+    .bar.planned {
+        fill: #4CAF50 !important;
+    }
+
+    .bar.progress {
+        fill: #2196F3 !important;
+    }
+
+    .bar.completed {
+        fill: #FF9800 !important;
+    }
+
+    .bar.delayed {
+        fill: #F44336 !important;
+    }
+
+    .table-primary {
+        background-color: rgba(13, 110, 253, 0.1) !important;
+        border-left: 3px solid #0d6efd;
+    }
+
+    .gantt-container, .card {
+        animation: ganttFadeIn 0.5s ease-out;
+    }
+
+    .table-responsive {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+        .table-responsive::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .table-responsive::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .table-responsive::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+            .table-responsive::-webkit-scrollbar-thumb:hover {
+                background: #555;
+            }
+
+    .pulse-animation {
+        animation: ganttPulse 0.5s;
+    }
+
+    .bar-pulse-animation {
+        animation: ganttBarPulse 0.5s ease-in-out;
+    }
+
+    /* Стили для заголовка и описания */
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+    }
+
+        .page-header h1 {
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            max-width: 800px;
+        }
+
+    /* Стили для карточек статистики */
+    .stat-card {
+        transition: transform 0.3s;
+        border: none;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+
+    /* Стили для тепловой карты */
+    .heatmap-container {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-top: 2rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        border: 1px solid #e0e0e0;
+    }
+
+    .heatmap-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+    .heatmap-cell {
+        height: 80px;
+        border-radius: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        transition: transform 0.2s;
+        cursor: pointer;
+    }
+
+        .heatmap-cell:hover {
+            transform: scale(1.05);
+        }
+
+    .cell-low {
+        background-color: #4CAF50;
+    }
+
+    .cell-medium {
+        background-color: #FFC107;
+    }
+
+    .cell-high {
+        background-color: #F44336;
+    }
+
+    /* Адаптивность */
+
+</style>
+
+<div class="container-fluid mt-4">
+    <!-- Заголовок страницы -->
+    <div class="page-header">
+        <h1 class="display-4">Демо плановых работ</h1>
+        <p>Интерактивная диаграмма Ганта для планирования работ и тепловая карта загрузки подразделений</p>
+    </div>
+
+    <!-- Диаграмма Ганта -->
+    <div id="gantt-chart-section">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-project-diagram me-2"></i>Диаграмма Ганта - Планирование работ</h2>
+            <div class="btn-group">
+                <button class="btn btn-outline-primary btn-sm" onclick="changeViewMode('Day')">
+                    <i class="fas fa-calendar-day"></i> День
+                </button>
+                <button class="btn btn-outline-primary btn-sm" onclick="changeViewMode('Week')">
+                    <i class="fas fa-calendar-week"></i> Неделя
+                </button>
+                <button class="btn btn-outline-primary btn-sm" onclick="changeViewMode('Month')">
+                    <i class="fas fa-calendar-alt"></i> Месяц
+                </button>
+            </div>
+        </div>
+
+        <div class="gantt-controls">
+            <div class="row align-items-center">
+                <div class="col-md-4">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        <input type="text" id="taskSearch" class="form-control" placeholder="Поиск задачи...">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <select class="form-select form-select-sm" id="departmentFilter">
+                        <option value="all">Все подразделения</option>
+                        <option value="otipb">ОТиПБ</option>
+                        <option value="maintenance">Техобслуживание</option>
+                        <option value="production">Производство</option>
+                        <option value="engineering">Инжиниринг</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <select class="form-select form-select-sm" id="statusFilter">
+                        <option value="all">Все статусы</option>
+                        <option value="planned">Запланировано</option>
+                        <option value="progress">В работе</option>
+                        <option value="completed">Завершено</option>
+                        <option value="delayed">Не выполнено</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Контейнер для диаграммы Ганта -->
+        <div class="gantt-container">
+            <div id="gantt"></div>
+        </div>
+
+        <!-- Легенда -->
+        <div class="gantt-legend">
+            <div class="row">
+                <div class="col-auto">
+                    <span class="d-inline-block me-2" style="width: 20px; height: 15px; background-color: #4CAF50;"></span>
+                    <small>Запланировано</small>
+                </div>
+                <div class="col-auto">
+                    <span class="d-inline-block me-2" style="width: 20px; height: 15px; background-color: #2196F3;"></span>
+                    <small>В работе</small>
+                </div>
+                <div class="col-auto">
+                    <span class="d-inline-block me-2" style="width: 20px; height: 15px; background-color: #FF9800;"></span>
+                    <small>Завершено</small>
+                </div>
+                <div class="col-auto">
+                    <span class="d-inline-block me-2" style="width: 20px; height: 15px; background-color: #F44336;"></span>
+                    <small>Не выполнено</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Статистика -->
+        <div class="row mt-4">
+            <div class="col-md-3">
+                <div class="card text-white bg-primary mb-3 stat-card">
+                    <div class="card-body">
+                        <h5 class="card-title" id="totalTasks">0</h5>
+                        <p class="card-text">Всего задач</p>
+                        <i class="fas fa-tasks fa-2x opacity-50 position-absolute" style="bottom: 15px; right: 15px;"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-success mb-3 stat-card">
+                    <div class="card-body">
+                        <h5 class="card-title" id="completedTasks">0</h5>
+                        <p class="card-text">Завершено</p>
+                        <i class="fas fa-check-circle fa-2x opacity-50 position-absolute" style="bottom: 15px; right: 15px;"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-warning mb-3 stat-card">
+                    <div class="card-body">
+                        <h5 class="card-title" id="inProgressTasks">0</h5>
+                        <p class="card-text">В работе</p>
+                        <i class="fas fa-spinner fa-2x opacity-50 position-absolute" style="bottom: 15px; right: 15px;"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-danger mb-3 stat-card">
+                    <div class="card-body">
+                        <h5 class="card-title" id="delayedTasks">0</h5>
+                        <p class="card-text">Не выполнено</p>
+                        <i class="fas fa-exclamation-triangle fa-2x opacity-50 position-absolute" style="bottom: 15px; right: 15px;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Список задач -->
+        <div class="card mt-4">
+            <div class="card-header bg-light">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-tasks me-2"></i>Список задач</h5>
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-success" onclick="addNewTask()">
+                            <i class="fas fa-plus"></i> Добавить
+                        </button>
+                        <button class="btn btn-sm btn-outline-info" onclick="exportData()">
+                            <i class="fas fa-download"></i> Экспорт
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Задача</th>
+                                <th>Исполнитель</th>
+                                <th>Начало</th>
+                                <th>Завершение</th>
+                                <th>Прогресс</th>
+                                <th>Статус</th>
+                            </tr>
+                        </thead>
+                        <tbody id="taskTableBody">
+                            <!-- Заполняется JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Тепловая карта -->
+    <div class="heatmap-container">
+        <h3><i class="fas fa-fire me-2"></i>Тепловая карта загрузки подразделений</h3>
+        <p class="text-muted">Визуализация загрузки отделов на основе текущих задач</p>
+
+        <div class="heatmap-grid" id="heatmap">
+            <!-- Заполняется JavaScript -->
+        </div>
+
+        <div class="mt-3">
+            <div class="row">
+                <div class="col-auto">
+                    <span class="d-inline-block me-2" style="width: 20px; height: 15px; background-color: #4CAF50;"></span>
+                    <small>Низкая загрузка</small>
+                </div>
+                <div class="col-auto">
+                    <span class="d-inline-block me-2" style="width: 20px; height: 15px; background-color: #FFC107;"></span>
+                    <small>Средняя загрузка</small>
+                </div>
+                <div class="col-auto">
+                    <span class="d-inline-block me-2" style="width: 20px; height: 15px; background-color: #F44336;"></span>
+                    <small>Высокая загрузка</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Гистограмма -->
+    <div class="card mt-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Гистограмма распределения задач</h5>
+        </div>
+        <div class="card-body">
+            <div class="row align-items-end" id="histogram" style="height: 200px;">
+                <!-- Заполняется JavaScript -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Подключаем библиотеку для диаграммы Ганта -->
+<script src='https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.min.js'></script>
+
+<script>
+    // Данные для диаграммы Ганта
+    const tasks = [
+        {
+            id: 'task1',
+            name: '№14 1550 т',
+            start: '2025-12-04 20:00',
+            end: '2025-12-05 08:00',
+            progress: 100,
+            dependencies: '',
+            department: 'production',
+            status: 'completed',
+            assignee: 'Участок нагревательных печей',
+            color: '#4CAF50'
+        },
+        {
+            id: 'task2',
+            name: 'Перевалка',
+            start: '2025-12-05 08:00',
+            end: '2025-12-05 20:00',
+            progress: 80,
+            dependencies: 'task1',
+            department: 'maintenance',
+            status: 'progress',
+            assignee: 'Петрова С.И.',
+            color: '#2196F3'
+        },
+        {
+            id: 'task3',
+            name: '№25 1300т',
+            start: '2025-12-05 20:00',
+            end: '2025-12-06 08:00',
+            progress: 60,
+            dependencies: '',
+            department: 'production',
+            status: 'progress',
+            assignee: 'Сидоров В.М.',
+            color: '#2196F3'
+        },
+        {
+            id: 'task4',
+            name: 'ППР',
+            start: '2025-12-06 08:00',
+            end: '2025-12-06 20:00',
+            progress: 30,
+            dependencies: '',
+            department: 'maintenance',
+            status: 'progress',
+            assignee: 'Кузнецов Д.А.',
+            color: '#2196F3'
+        },
+        {
+            id: 'task5',
+            name: '№12 слиттинг 2050т',
+            start: '2025-12-06 20:00',
+            end: '2025-12-07 08:00',
+            progress: 0,
+            dependencies: '',
+            department: 'production',
+            status: 'planned',
+            assignee: 'Иванов А.П.',
+            color: '#FF9800'
+        },
+        {
+            id: 'task6',
+            name: 'Капитальный ремонт стана',
+            start: '2025-12-07 08:00',
+            end: '2025-12-07 20:00',
+            progress: 40,
+            dependencies: '',
+            department: 'maintenance',
+            status: 'delayed',
+            assignee: 'Васильев П.С.',
+            color: '#F44336'
+        },
+        {
+            id: 'task7',
+            name: '№12 слиттинг 2050т',
+            start: '2025-12-07 20:00',
+            end: '2025-12-08 08:00',
+            progress: 20,
+            dependencies: '',
+            department: 'production',
+            status: 'progress',
+            assignee: 'Петрова С.И.',
+            color: '#2196F3'
+        },
+        {
+            id: 'task8',
+            name: 'Смена сорта',
+            start: '2025-12-08 08:00',
+            end: '2025-12-08 20:00',
+            progress: 90,
+            dependencies: '',
+            department: 'maintenance',
+            status: 'progress',
+            assignee: 'Смирнов О.Л.',
+            color: '#2196F3'
+        },
+        {
+            id: 'task9',
+            name: 'Смена сорта',
+            start: '2025-12-08 20:00',
+            end: '2025-12-09 08:00',
+            progress: 90,
+            dependencies: '',
+            department: 'maintenance',
+            status: 'progress',
+            assignee: 'Смирнов О.Л.',
+            color: '#2196F3'
+        },
+                {
+            id: 'task10',
+            name: '№12 слиттинг 2050т',
+            start: '2025-12-09 08:00',
+            end: '2025-12-09 20:00',
+            progress: 20,
+            dependencies: '',
+            department: 'production',
+            status: 'progress',
+            assignee: 'Петрова С.И.',
+            color: '#2196F3'
+        },
+        {
+            id: 'task11',
+            name: '№14 1550 т',
+            start: '2025-12-09 20:00',
+            end: '2025-12-10 08:00',
+            progress: 100,
+            dependencies: '',
+            department: 'production',
+            status: 'completed',
+            assignee: 'Участок нагревательных печей',
+            color: '#4CAF50'
+        },
+        {
+            id: 'task12',
+            name: 'Перевалка',
+            start: '2025-12-10 08:00',
+            end: '2025-12-10 20:00',
+            progress: 80,
+            dependencies: 'task1',
+            department: 'maintenance',
+            status: 'progress',
+            assignee: 'Петрова С.И.',
+            color: '#2196F3'
+        },
+        {
+            id: 'task13',
+            name: '№25 1300т',
+            start: '2025-12-10 20:00',
+            end: '2025-12-11 08:00',
+            progress: 60,
+            dependencies: '',
+            department: 'production',
+            status: 'progress',
+            assignee: 'Сидоров В.М.',
+            color: '#2196F3'
+        },
+        {
+            id: 'task4',
+            name: 'ППР',
+            start: '2025-12-11 08:00',
+            end: '2025-12-11 20:00',
+            progress: 30,
+            dependencies: '',
+            department: 'maintenance',
+            status: 'progress',
+            assignee: 'Кузнецов Д.А.',
+            color: '#2196F3'
+        },
+        {
+            id: 'task5',
+            name: '№12 слиттинг 2050т',
+            start: '2025-12-11 20:00',
+            end: '2025-12-12 08:00',
+            progress: 0,
+            dependencies: '',
+            department: 'production',
+            status: 'planned',
+            assignee: 'Иванов А.П.',
+            color: '#FF9800'
+        }
+
+
+
+
+
+
+
+
+    ];
+
+    let ganttChart;
+
+    // Инициализация при загрузке страницы
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeGanttChart();
+        updateTaskTable();
+        updateStatistics();
+        createHeatmap();
+        createHistogram();
+
+        // Поиск задач
+        document.getElementById('taskSearch').addEventListener('input', filterTasks);
+
+        // Фильтры
+        document.getElementById('departmentFilter').addEventListener('change', filterTasks);
+        document.getElementById('statusFilter').addEventListener('change', filterTasks);
+    });
+
+    function initializeGanttChart() {
+        const formattedTasks = tasks.map(task => ({
+            id: task.id,
+            name: task.name,
+            start: task.start,
+            end: task.end,
+            progress: task.progress,
+            dependencies: task.dependencies,
+            custom_class: task.status
+        }));
+
+        ganttChart = new Gantt("#gantt", formattedTasks, {
+            header_height: 50,
+            column_width: 30,
+            step: 24,
+            view_modes: ['Day', 'Week', 'Month'],
+            bar_height: 20,
+            bar_corner_radius: 3,
+            arrow_curve: 5,
+            padding: 18,
+            view_mode: 'Day',
+            date_format: 'YYYY-MM-DD HH:MM',
+            custom_popup_html: function(task) {
+                const taskData = tasks.find(t => t.id === task.id);
+                return `
+                    <div class="popup-container">
+                        <h5>${task.name}</h5>
+                        <p><strong>Исполнитель:</strong> ${taskData.assignee}</p>
+                        <p><strong>Подразделение:</strong> ${getDepartmentName(taskData.department)}</p>
+                        <p><strong>Прогресс:</strong> ${task.progress}%</p>
+                        <p><strong>Период:</strong> ${task.start} - ${task.end}</p>
+                        <p><strong>Статус:</strong> ${getStatusName(taskData.status)}</p>
+                    </div>
+                `;
+            },
+            on_click: function(task) {
+                highlightTaskInTable(task.id);
+            }
+        });
+    }
+
+    function changeViewMode(mode) {
+        ganttChart.change_view_mode(mode);
+    }
+
+    function filterTasks() {
+        const searchText = document.getElementById('taskSearch').value.toLowerCase();
+        const department = document.getElementById('departmentFilter').value;
+        const status = document.getElementById('statusFilter').value;
+
+        const filteredTasks = tasks.filter(task => {
+            const matchesSearch = task.name.toLowerCase().includes(searchText) ||
+                                 task.assignee.toLowerCase().includes(searchText);
+            const matchesDept = department === 'all' || task.department === department;
+            const matchesStatus = status === 'all' || task.status === status;
+
+            return matchesSearch && matchesDept && matchesStatus;
+        });
+
+        updateGanttWithFilteredTasks(filteredTasks);
+        updateTaskTable(filteredTasks);
+        updateStatistics(filteredTasks);
+    }
+
+    function updateGanttWithFilteredTasks(filteredTasks) {
+        const formattedTasks = filteredTasks.map(task => ({
+            id: task.id,
+            name: task.name,
+            start: task.start,
+            end: task.end,
+            progress: task.progress,
+            dependencies: task.dependencies,
+            custom_class: task.status
+        }));
+
+        ganttChart.refresh(formattedTasks);
+    }
+
+    function updateTaskTable(filteredTasks = tasks) {
+        const tableBody = document.getElementById('taskTableBody');
+        tableBody.innerHTML = '';
+
+        filteredTasks.forEach(task => {
+            const row = document.createElement('tr');
+            row.className = 'task-card';
+            row.onclick = () => highlightTaskInGantt(task.id);
+            row.id = `task-row-${task.id}`;
+
+            const progressBar = `
+                <div class="progress progress-bar-gantt">
+                    <div class="progress-bar" role="progressbar"
+                         style="width: ${task.progress}%; background-color: ${task.color};"
+                         aria-valuenow="${task.progress}" aria-valuemin="0" aria-valuemax="100">
+                    </div>
+                </div>
+                <small>${task.progress}%</small>
+            `;
+
+            const statusBadge = getStatusBadge(task.status);
+
+            row.innerHTML = `
+                <td><strong>${task.name}</strong></td>
+                <td>${task.assignee}</td>
+                <td>${task.start}</td>
+                <td>${task.end}</td>
+                <td>${progressBar}</td>
+                <td>${statusBadge}</td>
+            `;
+
+            tableBody.appendChild(row);
+        });
+    }
+
+    function updateStatistics(filteredTasks = tasks) {
+        const totalTasks = filteredTasks.length;
+        const completedTasks = filteredTasks.filter(t => t.status === 'completed').length;
+        const inProgressTasks = filteredTasks.filter(t => t.status === 'progress').length;
+        const delayedTasks = filteredTasks.filter(t => t.status === 'delayed').length;
+
+        document.getElementById('totalTasks').textContent = totalTasks;
+        document.getElementById('completedTasks').textContent = completedTasks;
+        document.getElementById('inProgressTasks').textContent = inProgressTasks;
+        document.getElementById('delayedTasks').textContent = delayedTasks;
+    }
+
+    function createHeatmap() {
+        const heatmap = document.getElementById('heatmap');
+        heatmap.innerHTML = '';
+
+        const departments = [
+            { name: 'Участок НП', count: 4, load: 'high' },
+            { name: 'ЦСО ПП', count: 2, load: 'medium' },
+            { name: 'УСиПК', count: 3, load: 'high' },
+            { name: 'Участок стана', count: 1, load: 'low' },
+            { name: 'ВТЦ', count: 2, load: 'medium' }
+            // { name: 'Энергетика', count: 3, load: 'high' },
+            // { name: 'Экология', count: 1, load: 'low' },
+            // { name: 'Качество', count: 2, load: 'medium' }
+        ];
+
+        departments.forEach(dept => {
+            const cell = document.createElement('div');
+            cell.className = `heatmap-cell cell-${dept.load}`;
+            cell.innerHTML = `
+                <div class="text-center">
+                    <div style="font-size: 0.9rem;">${dept.name}</div>
+                    <div style="font-size: 1.2rem;">${dept.count}</div>
+                    <small>задач</small>
+                </div>
+            `;
+            cell.onclick = () => {
+                document.getElementById('departmentFilter').value =
+                    //dept.name === 'ОТиПБ' ? 'otipb' :
+                    dept.name === 'ЦСО ПП' ? 'maintenance' :
+                    dept.name === 'Производство' ? 'production' :
+                    //dept.name === 'Инжиниринг' ? 'engineering' : 'all';
+                filterTasks();
+            };
+            heatmap.appendChild(cell);
+        });
+    }
+
+    function createHistogram() {
+        const histogram = document.getElementById('histogram');
+        histogram.innerHTML = '';
+
+        const data = [
+            { month: 'Янв', tasks: 8, completed: 3 },
+            { month: 'Фев', tasks: 12, completed: 8 },
+            { month: 'Мар', tasks: 10, completed: 5 },
+            { month: 'Апр', tasks: 15, completed: 10 },
+            { month: 'Май', tasks: 8, completed: 4 }
+        ];
+
+        const maxTasks = Math.max(...data.map(d => d.tasks));
+
+        data.forEach(item => {
+            const col = document.createElement('div');
+            col.className = 'col text-center';
+
+            const totalHeight = (item.tasks / maxTasks) * 150;
+            const completedHeight = (item.completed / item.tasks) * totalHeight;
+
+            col.innerHTML = `
+                <div style="height: ${totalHeight}px; position: relative; width: 40px; margin: 0 auto;">
+                    <div style="height: ${completedHeight}px; background-color: #4CAF50; position: absolute; bottom: 0; width: 100%; border-radius: 3px 3px 0 0;"></div>
+                    <div style="height: ${totalHeight - completedHeight}px; background-color: #2196F3; position: absolute; bottom: ${completedHeight}px; width: 100%; border-radius: 0 0 3px 3px;"></div>
+                </div>
+                <div class="mt-2">
+                    <strong>${item.month}</strong><br>
+                    <small>${item.completed}/${item.tasks}</small>
+                </div>
+            `;
+
+            histogram.appendChild(col);
+        });
+    }
+
+    function getDepartmentName(dept) {
+        const departments = {
+            
+            'maintenance': 'ЦСО ПП',
+            'production': 'Производство',
+     
+        };
+        return departments[dept] || dept;
+    }
+
+    function getStatusName(status) {
+        const statuses = {
+            'planned': 'Запланировано',
+            'progress': 'В работе',
+            'completed': 'Завершено',
+            'delayed': 'Отставание'
+        };
+        return statuses[status] || status;
+    }
+
+    function getStatusBadge(status) {
+        const badges = {
+            'planned': '<span class="badge bg-warning status-badge">Запланировано</span>',
+            'progress': '<span class="badge bg-primary status-badge">В работе</span>',
+            'completed': '<span class="badge bg-success status-badge">Завершено</span>',
+            'delayed': '<span class="badge bg-danger status-badge">Отставание</span>'
+        };
+        return badges[status] || '';
+    }
+
+    function highlightTaskInTable(taskId) {
+        document.querySelectorAll('#taskTableBody tr').forEach(row => {
+            row.classList.remove('table-primary');
+        });
+
+        const selectedRow = document.getElementById(`task-row-${taskId}`);
+        if (selectedRow) {
+            selectedRow.classList.add('table-primary');
+            selectedRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
+
+    function highlightTaskInGantt(taskId) {
+        const taskBar = document.querySelector(`.bar[data-id="${taskId}"]`);
+        if (taskBar) {
+            taskBar.classList.add('bar-pulse-animation');
+            setTimeout(() => {
+                taskBar.classList.remove('bar-pulse-animation');
+            }, 500);
+        }
+    }
+
+    function addNewTask() {
+        const newTask = {
+            id: 'task' + (tasks.length + 1),
+            name: 'Новая задача',
+            start: '2025-02-01',
+            end: '2025-02-15',
+            progress: 0,
+            dependencies: '',
+            department: 'otipb',
+            status: 'planned',
+            assignee: 'Новый исполнитель',
+            color: '#4CAF50'
+        };
+
+        tasks.push(newTask);
+        initializeGanttChart();
+        updateTaskTable();
+        updateStatistics();
+
+        const newRow = document.getElementById(`task-row-${newTask.id}`);
+        if (newRow) {
+            newRow.classList.add('pulse-animation');
+            setTimeout(() => {
+                newRow.classList.remove('pulse-animation');
+            }, 500);
+        }
+
+        alert('Новая задача добавлена!');
+    }
+
+    function exportData() {
+        const dataStr = JSON.stringify(tasks, null, 2);
+        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+
+        const linkElement = document.createElement('a');
+        linkElement.setAttribute('href', dataUri);
+        linkElement.setAttribute('download', 'gantt-data.json');
+        linkElement.click();
+    }
+</script>

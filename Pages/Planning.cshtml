@@ -1,0 +1,1058 @@
+﻿@page
+@model PlanningModel
+@{
+    ViewData["Title"] = "Плановые работы";
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+    /* Основные стили */
+    body {
+        background-color: #f8f9fa;
+    }
+
+    .container-fluid {
+        padding: 20px;
+    }
+
+    /* Стили для чек-листа */
+    .checklist-container {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        padding: 20px;
+        margin-bottom: 20px;
+        height: 100%;
+        max-height: 600px;
+        overflow-y: auto;
+    }
+
+    .checklist-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+
+    .checklist-item {
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        padding: 15px;
+        transition: all 0.3s;
+        cursor: pointer;
+    }
+
+        .checklist-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-color: #007bff;
+        }
+
+        .checklist-item.selected {
+            background-color: #e7f1ff;
+            border-color: #007bff;
+            border-left: 4px solid #007bff;
+        }
+
+    /* Радиобаттоны */
+    .work-radio {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+        accent-color: #007bff;
+    }
+
+    .work-label {
+        cursor: pointer;
+        margin-left: 10px;
+        font-weight: 500;
+        color: #333;
+    }
+
+    .work-meta {
+        font-size: 0.85rem;
+        color: #666;
+        margin-top: 5px;
+    }
+
+    .work-badge {
+        font-size: 0.75rem;
+        padding: 3px 8px;
+        border-radius: 12px;
+    }
+
+    /* Стили для таблицы операций */
+    .operations-container {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .operations-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .operations-table th {
+            background-color: #f8f9fa;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #495057;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .operations-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e0e0e0;
+            vertical-align: middle;
+        }
+
+        .operations-table tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .operations-table tr.selected {
+            background-color: #e7f1ff;
+        }
+
+    /* Стили для панели управления */
+    .control-panel {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        padding: 25px;
+        margin-bottom: 20px;
+    }
+
+    .control-section {
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 25px;
+        background-color: #fafafa;
+    }
+
+        .control-section h5 {
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #007bff;
+        }
+
+    .status-btn {
+        margin: 5px;
+        min-width: 120px;
+    }
+
+    /* Стили для формы */
+    .form-label {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 8px;
+    }
+
+    .form-control, .form-select {
+        border-radius: 6px;
+        border: 1px solid #ced4da;
+        padding: 10px;
+    }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+
+    /* Стили для скроллбаров */
+    .checklist-container::-webkit-scrollbar,
+    .operations-container::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .checklist-container::-webkit-scrollbar-track,
+    .operations-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+
+    .checklist-container::-webkit-scrollbar-thumb,
+    .operations-container::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 4px;
+    }
+
+        .checklist-container::-webkit-scrollbar-thumb:hover,
+        .operations-container::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+    /* Анимации */
+   
+
+    .checklist-container, .operations-container, .control-panel {
+        animation: fadeIn 0.5s ease-out;
+    }
+
+    
+
+    /* Стили для индикаторов */
+    .progress-indicator {
+        width: 100%;
+        height: 6px;
+        background-color: #e0e0e0;
+        border-radius: 3px;
+        overflow: hidden;
+        margin-top: 5px;
+    }
+
+    .progress-fill {
+        height: 100%;
+        border-radius: 3px;
+        transition: width 0.3s ease;
+    }
+
+    /* Цвета для статусов */
+    .status-planned {
+        background-color: #6c757d;
+        color: white;
+    }
+
+    .status-inprogress {
+        background-color: #007bff;
+        color: white;
+    }
+
+    .status-completed {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .status-delayed {
+        background-color: #dc3545;
+        color: white;
+    }
+
+    .status-cancelled {
+        background-color: #6c757d;
+        color: white;
+    }
+
+    .progress-planned {
+        background-color: #6c757d;
+    }
+
+    .progress-inprogress {
+        background-color: #007bff;
+    }
+
+    .progress-completed {
+        background-color: #28a745;
+    }
+
+    .progress-delayed {
+        background-color: #dc3545;
+    }
+
+    /* Кнопки действий */
+    .action-buttons {
+        position: sticky;
+        bottom: 0;
+        background: white;
+        padding: 15px;
+        border-top: 1px solid #dee2e6;
+        margin-top: 20px;
+        border-radius: 0 0 10px 10px;
+    }
+</style>
+
+<div class="container-fluid">
+    <!-- Заголовок страницы -->
+    <div class="page-header mb-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; border-radius: 10px;">
+        <h1 class="display-4 mb-3">Блок плановых работ</h1>
+        <p class="lead mb-0">Управление чек-листом задач, полученных из ИП. Выберите работу для управления операциями.</p>
+    </div>
+
+    <div class="row">
+        <!-- Левая колонка: Чек-лист работ -->
+        <div class="col-lg-4">
+            <div class="checklist-container">
+                <div class="checklist-header">
+                    <h4 class="mb-0"><i class="fas fa-tasks me-2"></i>Чек-лист производственных заданий</h4>
+                    <small>Выберите работу для детального управления</small>
+                </div>
+
+                <div id="checklist">
+                    <!-- Работы будут добавлены через JavaScript -->
+                </div>
+
+                <!-- Статистика чек-листа -->
+                <div class="mt-4 p-3 bg-light rounded">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <h5 id="totalWorks">0</h5>
+                            <small class="text-muted">Всего работ</small>
+                        </div>
+                        <div class="col-6">
+                            <h5 id="completedWorks">0</h5>
+                            <small class="text-muted">Выполнено</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Центральная колонка: Таблица операций -->
+        <div class="col-lg-8">
+            <div class="operations-container" style="max-height: 600px; overflow-y: auto;">
+                <h4 class="mb-4"><i class="fas fa-cogs me-2"></i>Операции для выбранного задания</h4>
+                <p class="text-muted mb-4" id="selectedWorkTitle">Выберите задание из списка слева</p>
+
+                <table class="operations-table">
+                    <thead>
+                        <tr>
+                            <th width="50"></th>
+                            <th>Операция</th>
+                            <th>Статус</th>
+                            <th>Ответственный</th>
+                            <th>Трудозатраты</th>
+                            <th>Прогресс</th>
+                        </tr>
+                    </thead>
+                    <tbody id="operationsTableBody">
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-5">
+                                <i class="fas fa-info-circle fa-2x mb-3 d-block"></i>
+                                Выберите задание для отображения операций
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="action-buttons">
+                    <button class="btn btn-outline-primary" onclick="addNewOperation()" disabled id="addOperationBtn">
+                        <i class="fas fa-plus me-2"></i>Добавить операцию
+                    </button>
+                    <button class="btn btn-outline-success float-end" onclick="saveAllOperations()" disabled id="saveOperationsBtn">
+                        <i class="fas fa-save me-2"></i>Сохранить все изменения
+                    </button>
+                </div>
+            </div>
+
+            <!-- Панель управления выбранной операцией -->
+            <div class="control-panel mt-4">
+                <h4 class="mb-4"><i class="fas fa-sliders-h me-2"></i>Управление операцией</h4>
+                <p class="text-muted mb-4" id="selectedOperationTitle">Выберите операцию из таблицы выше</p>
+
+                <div class="row">
+                    <!-- Секция 1: Статус операции -->
+                    <div class="col-md-6">
+                        <div class="control-section">
+                            <h5><i class="fas fa-flag me-2"></i>Статус операции</h5>
+                            <div class="d-flex flex-wrap mb-3">
+                                <button class="btn status-btn btn-outline-secondary" onclick="changeOperationStatus('planned')">
+                                    Запланировано
+                                </button>
+                                <button class="btn status-btn btn-outline-primary" onclick="changeOperationStatus('inprogress')">
+                                    В работе
+                                </button>
+                                <button class="btn status-btn btn-outline-success" onclick="changeOperationStatus('completed')">
+                                    Выполнено
+                                </button>
+                                <button class="btn status-btn btn-outline-danger" onclick="changeOperationStatus('delayed')">
+                                    Отставание
+                                </button>
+                                <button class="btn status-btn btn-outline-dark" onclick="changeOperationStatus('cancelled')">
+                                    Отменено
+                                </button>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Текущий статус:</label>
+                                <div class="form-control" id="currentStatusDisplay">Не выбрано</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Секция 2: Причины невыполнения -->
+                    <div class="col-md-6">
+                        <div class="control-section">
+                            <h5><i class="fas fa-exclamation-triangle me-2"></i>Причины невыполнения</h5>
+                            <div class="mb-3">
+                                <label class="form-label">Выберите причину:</label>
+                                <select class="form-select" id="reasonSelect" onchange="updateOperationReason()" disabled>
+                                    <option value="">-- Выберите причину --</option>
+                                    <option value="no_materials">Отсутствие материалов</option>
+                                    <option value="no_personnel">Недостаток персонала</option>
+                                    <option value="weather">Погодные условия</option>
+                                    <option value="equipment_failure">Поломка оборудования</option>
+                                    <option value="plan_change">Изменение плана</option>
+                                    <option value="other">Другая причина</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Комментарий:</label>
+                                <textarea class="form-control" id="reasonComment" rows="2"
+                                          placeholder="Дополнительные детали..."
+                                          onchange="updateOperationComment()" disabled></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <!-- Секция 3: Назначение персонала -->
+                    <div class="col-md-6">
+                        <div class="control-section">
+                            <h5><i class="fas fa-users me-2"></i>Назначение персонала</h5>
+                            <div class="mb-3">
+                                <label class="form-label">Выберите ответственного:</label>
+                                <select class="form-select" id="personnelSelect" onchange="updateOperationPersonnel()" disabled>
+                                    <option value="">-- Выберите сотрудника --</option>
+                                    <option value="ivanov">Иванов А.П. (Специалист ОТиПБ)</option>
+                                    <option value="petrova">Петрова С.И. (Инженер ОТиПБ)</option>
+                                    <option value="sidorov">Сидоров В.М. (Механик)</option>
+                                    <option value="kuznetsov">Кузнецов Д.А. (Инженер КИП)</option>
+                                    <option value="vasiliev">Васильев П.С. (Начальник цеха)</option>
+                                    <option value="smirnov">Смирнов О.Л. (Эколог)</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Количество исполнителей:</label>
+                                <input type="number" class="form-control" id="personnelCount"
+                                       min="1" max="10" value="1"
+                                       onchange="updatePersonnelCount()" disabled>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Секция 4: Трудозатраты -->
+                    <div class="col-md-6">
+                        <div class="control-section">
+                            <h5><i class="fas fa-clock me-2"></i>Трудозатраты</h5>
+                            <div class="mb-3">
+                                <label class="form-label">Плановые (часы):</label>
+                                <input type="number" class="form-control" id="plannedHours"
+                                       min="0" step="0.5" value="0"
+                                       onchange="updatePlannedHours()" disabled>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Фактические (часы):</label>
+                                <input type="number" class="form-control" id="actualHours"
+                                       min="0" step="0.5" value="0"
+                                       onchange="updateActualHours()" disabled>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Разница:</label>
+                                <div class="form-control" id="hoursDifference">0 ч</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Кнопки управления -->
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="saveOperationChanges()" disabled id="saveOperationBtn">
+                        <i class="fas fa-save me-2"></i>Сохранить изменения операции
+                    </button>
+                    <button class="btn btn-outline-danger float-end" onclick="resetOperationChanges()">
+                        <i class="fas fa-undo me-2"></i>Сбросить изменения
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для новой операции -->
+    <div class="modal fade" id="addOperationModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Добавить новую операцию</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Название операции:</label>
+                        <input type="text" class="form-control" id="newOperationName" placeholder="Введите название операции">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Описание:</label>
+                        <textarea class="form-control" id="newOperationDesc" rows="3" placeholder="Описание операции"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Плановые трудозатраты (часы):</label>
+                        <input type="number" class="form-control" id="newOperationHours" min="0" step="0.5" value="1">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-primary" onclick="confirmAddOperation()">Добавить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // Данные для чек-листа работ
+    const works = [
+        {
+            id: 1,
+            title: '№14 1550тnnn' + '01.01.2021',
+            code: 'PROC-2025-001',
+            department: 'Участок стана',
+            priority: 'high',
+            status: 'inprogress',
+            progress: 60,
+            operations: [
+                { id: 1, name: 'производство проката в соответствии с плановым заданием и ТИ', status: 'completed', personnel: 'Иванов А.П.', hours: { planned: 8, actual: 6 }, reason: '' },
+                { id: 2, name: 'контроль за технологическим процессом, внесение корректировок в режимы прокатки', status: 'inprogress', personnel: 'Петрова С.И.', hours: { planned: 16, actual: 10 }, reason: '' },
+                { id: 3, name: 'обработка металлопроката под нхр', status: 'planned', personnel: '', hours: { planned: 12, actual: 0 }, reason: '' }
+            ]
+        },
+        {
+            id: 2,
+            title: 'Преревалка',
+            code: 'REP-2025-015',
+            department: 'УСиПК',
+            priority: 'medium',
+            status: 'planned',
+            progress: 0,
+            operations: [
+                { id: 1, name: 'Перевалка клетей', status: 'planned', personnel: '', hours: { planned: 4, actual: 0 }, reason: '' },
+                { id: 2, name: 'Замена привалковой арматуры', status: 'planned', personnel: '', hours: { planned: 8, actual: 0 }, reason: '' },
+                { id: 3, name: 'настройка подающих роликов трайбаппаратов №41,42', status: 'planned', personnel: '', hours: { planned: 6, actual: 0 }, reason: '' }
+            ]
+        },
+        {
+            id: 3,
+            title: '#25 1300т',
+            code: 'TRN-2025-008',
+            department: 'ОТиПБ',
+            priority: 'high',
+            status: 'completed',
+            progress: 100,
+            operations: [
+                { id: 1, name: 'Подготовка материалов', status: 'completed', personnel: 'Иванов А.П.', hours: { planned: 8, actual: 8 }, reason: '' },
+                { id: 2, name: 'Проведение инструктажа', status: 'completed', personnel: 'Петрова С.И.', hours: { planned: 16, actual: 16 }, reason: '' },
+                { id: 3, name: 'Тестирование персонала', status: 'completed', personnel: 'Иванов А.П.', hours: { planned: 8, actual: 8 }, reason: '' }
+            ]
+        },
+        {
+            id: 4,
+            title: 'Замена оборудования КИПиА',
+            code: 'EQP-2025-023',
+            department: 'Инжиниринг',
+            priority: 'high',
+            status: 'delayed',
+            progress: 30,
+            operations: [
+                { id: 1, name: 'Заказ оборудования', status: 'completed', personnel: 'Кузнецов Д.А.', hours: { planned: 4, actual: 4 }, reason: '' },
+                { id: 2, name: 'Доставка на объект', status: 'delayed', personnel: '', hours: { planned: 8, actual: 0 }, reason: 'Отсутствие транспорта' },
+                { id: 3, name: 'Монтаж и наладка', status: 'planned', personnel: '', hours: { planned: 24, actual: 0 }, reason: '' }
+            ]
+        },
+        {
+            id: 5,
+            title: 'Экологический мониторинг',
+            code: 'ENV-2025-012',
+            department: 'Экология',
+            priority: 'medium',
+            status: 'inprogress',
+            progress: 40,
+            operations: [
+                { id: 1, name: 'Отбор проб', status: 'completed', personnel: 'Смирнов О.Л.', hours: { planned: 16, actual: 16 }, reason: '' },
+                { id: 2, name: 'Лабораторный анализ', status: 'inprogress', personnel: 'Смирнов О.Л.', hours: { planned: 24, actual: 8 }, reason: '' },
+                { id: 3, name: 'Составление отчета', status: 'planned', personnel: '', hours: { planned: 12, actual: 0 }, reason: '' }
+            ]
+        }
+    ];
+
+    let selectedWorkId = null;
+    let selectedOperationId = null;
+    let currentOperationData = null;
+
+    // Инициализация при загрузке страницы
+    document.addEventListener('DOMContentLoaded', function() {
+        renderChecklist();
+        updateStatistics();
+
+        // Инициализация модального окна Bootstrap
+        var addOperationModal = new bootstrap.Modal(document.getElementById('addOperationModal'));
+    });
+
+    // Рендеринг чек-листа
+    function renderChecklist() {
+        const checklist = document.getElementById('checklist');
+        checklist.innerHTML = '';
+
+        works.forEach(work => {
+            const priorityBadge = work.priority === 'high' ?
+                '<span class="badge bg-danger work-badge">Высокий</span>' :
+                '<span class="badge bg-warning work-badge">Средний</span>';
+
+            const statusBadge = getStatusBadge(work.status);
+
+            const item = document.createElement('div');
+            item.className = `checklist-item ${selectedWorkId === work.id ? 'selected' : ''}`;
+            item.innerHTML = `
+                <div class="d-flex align-items-start">
+                    <input type="radio" class="work-radio" name="workSelection"
+                           id="work${work.id}"
+                           ${selectedWorkId === work.id ? 'checked' : ''}
+                           onclick="selectWork(${work.id})">
+                    <div class="flex-grow-1 ms-3">
+                        <label for="work${work.id}" class="work-label">${work.title}</label>
+                        <div class="work-meta">
+                            <span class="me-3"><i class="fas fa-hashtag"></i> ${work.code}</span>
+                            <span class="me-3"><i class="fas fa-building"></i> ${work.department}</span>
+                            ${priorityBadge}
+                            ${statusBadge}
+                        </div>
+                        <div class="progress-indicator">
+                            <div class="progress-fill ${getProgressClass(work.status)}"
+                                 style="width: ${work.progress}%"></div>
+                        </div>
+                        <small class="text-muted">${work.progress}% выполнено</small>
+                    </div>
+                </div>
+            `;
+
+            checklist.appendChild(item);
+        });
+    }
+
+    // Выбор работы
+    function selectWork(workId) {
+        selectedWorkId = workId;
+        selectedOperationId = null;
+        currentOperationData = null;
+
+        renderChecklist();
+        renderOperationsTable();
+        updateControlPanel();
+
+        // Активируем кнопки
+        document.getElementById('addOperationBtn').disabled = false;
+        document.getElementById('saveOperationsBtn').disabled = false;
+
+        // Обновляем заголовок
+        const work = works.find(w => w.id === workId);
+        document.getElementById('selectedWorkTitle').innerHTML = `
+            <strong>${work.title}</strong> <span class="text-muted">(${work.code})</span>
+        `;
+    }
+
+    // Рендеринг таблицы операций
+    function renderOperationsTable() {
+        const tableBody = document.getElementById('operationsTableBody');
+
+        if (!selectedWorkId) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-5">
+                        <i class="fas fa-info-circle fa-2x mb-3 d-block"></i>
+                        Выберите работу для отображения операций
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        const work = works.find(w => w.id === selectedWorkId);
+        tableBody.innerHTML = '';
+
+        work.operations.forEach(op => {
+            const statusBadge = getStatusBadge(op.status);
+            const personnel = op.personnel || '<span class="text-muted">Не назначен</span>';
+            const hours = `${op.hours.actual}/${op.hours.planned} ч`;
+
+            const row = document.createElement('tr');
+            row.className = selectedOperationId === op.id ? 'selected' : '';
+            row.onclick = () => selectOperation(op.id);
+            row.innerHTML = `
+                <td>
+                    <input type="radio" name="operationSelection"
+                           onclick="selectOperation(${op.id})"
+                           ${selectedOperationId === op.id ? 'checked' : ''}>
+                </td>
+                <td>
+                    <strong>${op.name}</strong>
+                    ${op.reason ? '<br><small class="text-danger"><i class="fas fa-exclamation-circle"></i> ' + op.reason + '</small>' : ''}
+                </td>
+                <td>${statusBadge}</td>
+                <td>${personnel}</td>
+                <td>${hours}</td>
+                <td>
+                    <div class="progress-indicator">
+                        <div class="progress-fill ${getProgressClass(op.status)}"
+                             style="width: ${op.hours.planned > 0 ? (op.hours.actual / op.hours.planned * 100) : 0}%"></div>
+                    </div>
+                    <small>${op.hours.planned > 0 ? Math.round(op.hours.actual / op.hours.planned * 100) : 0}%</small>
+                </td>
+            `;
+
+            tableBody.appendChild(row);
+        });
+    }
+
+    // Выбор операции
+    function selectOperation(operationId) {
+        selectedOperationId = operationId;
+        const work = works.find(w => w.id === selectedWorkId);
+        currentOperationData = work.operations.find(op => op.id === operationId);
+
+        renderOperationsTable();
+        updateControlPanel();
+
+        // Активируем элементы управления
+        document.getElementById('saveOperationBtn').disabled = false;
+        document.getElementById('reasonSelect').disabled = false;
+        document.getElementById('reasonComment').disabled = false;
+        document.getElementById('personnelSelect').disabled = false;
+        document.getElementById('personnelCount').disabled = false;
+        document.getElementById('plannedHours').disabled = false;
+        document.getElementById('actualHours').disabled = false;
+
+        // Обновляем заголовок
+        document.getElementById('selectedOperationTitle').innerHTML = `
+            <strong>${currentOperationData.name}</strong>
+        `;
+    }
+
+    // Обновление панели управления
+    function updateControlPanel() {
+        if (!currentOperationData) {
+            document.getElementById('currentStatusDisplay').textContent = 'Не выбрано';
+            document.getElementById('currentStatusDisplay').className = 'form-control';
+            document.getElementById('reasonSelect').value = '';
+            document.getElementById('reasonComment').value = '';
+            document.getElementById('personnelSelect').value = '';
+            document.getElementById('personnelCount').value = 1;
+            document.getElementById('plannedHours').value = 0;
+            document.getElementById('actualHours').value = 0;
+            document.getElementById('hoursDifference').textContent = '0 ч';
+            return;
+        }
+
+        // Статус
+        const statusText = getStatusText(currentOperationData.status);
+        document.getElementById('currentStatusDisplay').textContent = statusText;
+        document.getElementById('currentStatusDisplay').className = `form-control status-${currentOperationData.status}`;
+
+        // Причины (если есть)
+        if (currentOperationData.reason) {
+            document.getElementById('reasonSelect').value = 'other';
+            document.getElementById('reasonComment').value = currentOperationData.reason;
+        } else {
+            document.getElementById('reasonSelect').value = '';
+            document.getElementById('reasonComment').value = '';
+        }
+
+        // Персонал
+        if (currentOperationData.personnel) {
+            const personnelValue = getPersonnelValue(currentOperationData.personnel);
+            document.getElementById('personnelSelect').value = personnelValue;
+        } else {
+            document.getElementById('personnelSelect').value = '';
+        }
+
+        // Трудозатраты
+        document.getElementById('plannedHours').value = currentOperationData.hours.planned;
+        document.getElementById('actualHours').value = currentOperationData.hours.actual;
+
+        // Разница
+        const diff = currentOperationData.hours.actual - currentOperationData.hours.planned;
+        document.getElementById('hoursDifference').textContent = `${diff > 0 ? '+' : ''}${diff} ч`;
+        document.getElementById('hoursDifference').className = `form-control ${diff > 0 ? 'text-danger' : diff < 0 ? 'text-success' : ''}`;
+    }
+
+    // Изменение статуса операции
+    function changeOperationStatus(status) {
+        if (!currentOperationData) return;
+
+        currentOperationData.status = status;
+        updateControlPanel();
+
+        // Подсвечиваем кнопку
+        document.querySelectorAll('.status-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+
+        event.target.classList.add('active');
+    }
+
+    // Обновление причины
+    function updateOperationReason() {
+        if (!currentOperationData) return;
+
+        const select = document.getElementById('reasonSelect');
+        if (select.value === 'other') {
+            currentOperationData.reason = document.getElementById('reasonComment').value;
+        } else {
+            const reasonText = select.options[select.selectedIndex].text;
+            currentOperationData.reason = reasonText;
+            document.getElementById('reasonComment').value = reasonText;
+        }
+    }
+
+    function updateOperationComment() {
+        if (!currentOperationData) return;
+
+        currentOperationData.reason = document.getElementById('reasonComment').value;
+    }
+
+    // Обновление персонала
+    function updateOperationPersonnel() {
+        if (!currentOperationData) return;
+
+        const select = document.getElementById('personnelSelect');
+        if (select.value) {
+            const personnelText = select.options[select.selectedIndex].text.split(' (')[0];
+            currentOperationData.personnel = personnelText;
+        } else {
+            currentOperationData.personnel = '';
+        }
+    }
+
+    function updatePersonnelCount() {
+        // Можно добавить логику для учета количества персонала
+        console.log('Количество персонала обновлено:', document.getElementById('personnelCount').value);
+    }
+
+    // Обновление трудозатрат
+    function updatePlannedHours() {
+        if (!currentOperationData) return;
+
+        currentOperationData.hours.planned = parseFloat(document.getElementById('plannedHours').value) || 0;
+        updateHoursDifference();
+    }
+
+    function updateActualHours() {
+        if (!currentOperationData) return;
+
+        currentOperationData.hours.actual = parseFloat(document.getElementById('actualHours').value) || 0;
+        updateHoursDifference();
+    }
+
+    function updateHoursDifference() {
+        if (!currentOperationData) return;
+
+        const diff = currentOperationData.hours.actual - currentOperationData.hours.planned;
+        document.getElementById('hoursDifference').textContent = `${diff > 0 ? '+' : ''}${diff} ч`;
+        document.getElementById('hoursDifference').className = `form-control ${diff > 0 ? 'text-danger' : diff < 0 ? 'text-success' : ''}`;
+    }
+
+    // Сохранение изменений операции
+    function saveOperationChanges() {
+        if (!currentOperationData || !selectedWorkId) return;
+
+        // Обновляем прогресс работы
+        updateWorkProgress(selectedWorkId);
+
+        // Перерисовываем таблицу
+        renderOperationsTable();
+
+        // Показываем уведомление
+        showNotification('Изменения операции сохранены', 'success');
+    }
+
+    // Сохранение всех операций
+    function saveAllOperations() {
+        if (!selectedWorkId) return;
+
+        updateWorkProgress(selectedWorkId);
+        updateStatistics();
+
+        showNotification('Все изменения сохранены', 'success');
+
+        // В реальном приложении здесь был бы AJAX-запрос на сервер
+        console.log('Данные для сохранения:', works);
+    }
+
+    // Добавление новой операции
+    function addNewOperation() {
+        // Открываем модальное окно через Bootstrap
+        const modal = new bootstrap.Modal(document.getElementById('addOperationModal'));
+        modal.show();
+    }
+
+    function confirmAddOperation() {
+        const name = document.getElementById('newOperationName').value;
+        const desc = document.getElementById('newOperationDesc').value;
+        const hours = parseFloat(document.getElementById('newOperationHours').value) || 0;
+
+        if (!name.trim()) {
+            showNotification('Введите название операции', 'warning');
+            return;
+        }
+
+        const work = works.find(w => w.id === selectedWorkId);
+        const newOpId = work.operations.length > 0 ?
+            Math.max(...work.operations.map(op => op.id)) + 1 : 1;
+
+        work.operations.push({
+            id: newOpId,
+            name: name,
+            description: desc,
+            status: 'planned',
+            personnel: '',
+            hours: { planned: hours, actual: 0 },
+            reason: ''
+        });
+
+        // Закрываем модальное окно
+        const modal = bootstrap.Modal.getInstance(document.getElementById('addOperationModal'));
+        modal.hide();
+
+        // Очищаем форму
+        document.getElementById('newOperationName').value = '';
+        document.getElementById('newOperationDesc').value = '';
+        document.getElementById('newOperationHours').value = '1';
+
+        // Обновляем отображение
+        renderOperationsTable();
+        updateWorkProgress(selectedWorkId);
+
+        showNotification('Новая операция добавлена', 'success');
+    }
+
+    // Сброс изменений
+    function resetOperationChanges() {
+        if (currentOperationData && selectedWorkId) {
+            // Восстанавливаем исходные данные
+            const work = works.find(w => w.id === selectedWorkId);
+            const originalOp = work.operations.find(op => op.id === selectedOperationId);
+
+            // Копируем свойства из оригинальной операции
+            Object.assign(currentOperationData, JSON.parse(JSON.stringify(originalOp)));
+
+            updateControlPanel();
+            renderOperationsTable();
+
+            showNotification('Изменения сброшены', 'info');
+        }
+    }
+
+    // Вспомогательные функции
+    function getStatusBadge(status) {
+        const badges = {
+            'planned': '<span class="badge bg-secondary work-badge">Запланировано</span>',
+            'inprogress': '<span class="badge bg-primary work-badge">В работе</span>',
+            'completed': '<span class="badge bg-success work-badge">Выполнено</span>',
+            'delayed': '<span class="badge bg-danger work-badge">Отставание</span>',
+            'cancelled': '<span class="badge bg-dark work-badge">Отменено</span>'
+        };
+        return badges[status] || '';
+    }
+
+    function getStatusText(status) {
+        const texts = {
+            'planned': 'Запланировано',
+            'inprogress': 'В работе',
+            'completed': 'Выполнено',
+            'delayed': 'Отставание',
+            'cancelled': 'Отменено'
+        };
+        return texts[status] || status;
+    }
+
+    function getProgressClass(status) {
+        const classes = {
+            'planned': 'progress-planned',
+            'inprogress': 'progress-inprogress',
+            'completed': 'progress-completed',
+            'delayed': 'progress-delayed',
+            'cancelled': 'progress-planned'
+        };
+        return classes[status] || 'progress-planned';
+    }
+
+    function getPersonnelValue(personnelName) {
+        const personnelMap = {
+            'Иванов А.П.': 'ivanov',
+            'Петрова С.И.': 'petrova',
+            'Сидоров В.М.': 'sidorov',
+            'Кузнецов Д.А.': 'kuznetsov',
+            'Васильев П.С.': 'vasiliev',
+            'Смирнов О.Л.': 'smirnov'
+        };
+        return personnelMap[personnelName] || '';
+    }
+
+    function updateWorkProgress(workId) {
+        const work = works.find(w => w.id === workId);
+        if (!work || !work.operations.length) return;
+
+        // Рассчитываем общий прогресс на основе статусов операций
+        const totalOps = work.operations.length;
+        const completedOps = work.operations.filter(op => op.status === 'completed').length;
+        const inProgressOps = work.operations.filter(op => op.status === 'inprogress').length;
+
+        // Рассчитываем прогресс: 100% за выполненные, 50% за в работе
+        work.progress = Math.round((completedOps * 100 + inProgressOps * 50) / totalOps);
+
+        // Обновляем статус работы
+        if (work.progress === 100) {
+            work.status = 'completed';
+        } else if (work.operations.some(op => op.status === 'delayed')) {
+            work.status = 'delayed';
+        } else if (work.operations.some(op => op.status === 'inprogress')) {
+            work.status = 'inprogress';
+        }
+
+        renderChecklist();
+    }
+
+    function updateStatistics() {
+        const totalWorks = works.length;
+        const completedWorks = works.filter(w => w.status === 'completed').length;
+
+        document.getElementById('totalWorks').textContent = totalWorks;
+        document.getElementById('completedWorks').textContent = completedWorks;
+    }
+
+    function showNotification(message, type) {
+        // Создаем уведомление
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+        notification.style.cssText = `
+            top: 20px;
+            right: 20px;
+            z-index: 1050;
+            min-width: 300px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        `;
+
+        notification.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+
+        document.body.appendChild(notification);
+
+        // Автоматически скрываем через 3 секунды
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 3000);
+    }
+
+    // Экспорт данных (для демонстрации)
+    function exportData() {
+        const dataStr = JSON.stringify(works, null, 2);
+        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+
+        const linkElement = document.createElement('a');
+        linkElement.setAttribute('href', dataUri);
+        linkElement.setAttribute('download', 'planning-data.json');
+        linkElement.click();
+    }
+</script>

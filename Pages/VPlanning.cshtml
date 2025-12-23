@@ -1,0 +1,1523 @@
+﻿@page
+@model VPlanningModel
+@{
+    ViewData["Title"] = "Внеплановые работы";
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+    /* Основные стили */
+    body {
+        background-color: #f8f9fa;
+    }
+
+    .container-fluid {
+        padding: 20px;
+    }
+
+    /* Стили для панели создания новой работы */
+    .creation-panel {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        padding: 25px;
+        margin-bottom: 25px;
+        border-left: 5px solid #dc3545;
+    }
+
+        .creation-panel h4 {
+            color: #dc3545;
+            border-bottom: 2px solid #dc3545;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+    /* Стили для чек-листа */
+    .checklist-container {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        padding: 20px;
+        margin-bottom: 20px;
+        height: 100%;
+        max-height: 600px;
+        overflow-y: auto;
+    }
+
+    .checklist-header {
+        background: linear-gradient(135deg, #dc3545 0%, #a71d2a 100%);
+        color: white;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+
+    .checklist-item {
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        padding: 15px;
+        transition: all 0.3s;
+        cursor: pointer;
+        border-left: 4px solid #dc3545;
+    }
+
+        .checklist-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-color: #dc3545;
+        }
+
+        .checklist-item.selected {
+            background-color: #ffeaea;
+            border-color: #dc3545;
+        }
+
+    /* Радиобаттоны */
+    .work-radio {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+        accent-color: #dc3545;
+    }
+
+    .work-label {
+        cursor: pointer;
+        margin-left: 10px;
+        font-weight: 500;
+        color: #333;
+    }
+
+    .work-meta {
+        font-size: 0.85rem;
+        color: #666;
+        margin-top: 5px;
+    }
+
+    .work-badge {
+        font-size: 0.75rem;
+        padding: 3px 8px;
+        border-radius: 12px;
+    }
+
+    /* Стили для таблицы операций */
+    .operations-container {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .operations-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .operations-table th {
+            background-color: #f8f9fa;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #495057;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .operations-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e0e0e0;
+            vertical-align: middle;
+        }
+
+        .operations-table tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .operations-table tr.selected {
+            background-color: #ffeaea;
+        }
+
+    /* Стили для панели управления */
+    .control-panel {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        padding: 25px;
+        margin-bottom: 20px;
+        border-left: 5px solid #fd7e14;
+    }
+
+    .control-section {
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 25px;
+        background-color: #fafafa;
+    }
+
+        .control-section h5 {
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+        }
+
+        /* Цветовые схемы для разных типов работ */
+        .control-section.emergency h5 {
+            border-bottom: 2px solid #dc3545;
+            color: #dc3545;
+        }
+
+        .control-section.urgent h5 {
+            border-bottom: 2px solid #fd7e14;
+            color: #fd7e14;
+        }
+
+        .control-section.standard h5 {
+            border-bottom: 2px solid #007bff;
+            color: #007bff;
+        }
+
+    .status-btn {
+        margin: 5px;
+        min-width: 120px;
+    }
+
+    /* Стили для формы */
+    .form-label {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 8px;
+    }
+
+    .form-control, .form-select {
+        border-radius: 6px;
+        border: 1px solid #ced4da;
+        padding: 10px;
+    }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+
+    /* Стили для скроллбаров */
+    .checklist-container::-webkit-scrollbar,
+    .operations-container::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .checklist-container::-webkit-scrollbar-track,
+    .operations-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+
+    .checklist-container::-webkit-scrollbar-thumb,
+    .operations-container::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 4px;
+    }
+
+        .checklist-container::-webkit-scrollbar-thumb:hover,
+        .operations-container::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+    /* Анимации */
+   
+
+    .checklist-container, .operations-container, .control-panel, .creation-panel {
+        animation: fadeIn 0.5s ease-out;
+    }
+
+   
+
+    .pulse-animation {
+        animation: pulse 2s infinite;
+    }
+
+    /* Адаптивность */
+   
+
+    /* Стили для индикаторов */
+    .progress-indicator {
+        width: 100%;
+        height: 6px;
+        background-color: #e0e0e0;
+        border-radius: 3px;
+        overflow: hidden;
+        margin-top: 5px;
+    }
+
+    .progress-fill {
+        height: 100%;
+        border-radius: 3px;
+        transition: width 0.3s ease;
+    }
+
+    /* Цвета для статусов */
+    .status-new {
+        background-color: #6c757d;
+        color: white;
+    }
+
+    .status-inprogress {
+        background-color: #007bff;
+        color: white;
+    }
+
+    .status-completed {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .status-delayed {
+        background-color: #dc3545;
+        color: white;
+    }
+
+    .status-cancelled {
+        background-color: #6c757d;
+        color: white;
+    }
+
+    .progress-new {
+        background-color: #6c757d;
+    }
+
+    .progress-inprogress {
+        background-color: #007bff;
+    }
+
+    .progress-completed {
+        background-color: #28a745;
+    }
+
+    .progress-delayed {
+        background-color: #dc3545;
+    }
+
+    /* Цвета для типов работ */
+    .badge-emergency {
+        background-color: #dc3545;
+        color: white;
+    }
+
+    .badge-urgent {
+        background-color: #fd7e14;
+        color: white;
+    }
+
+    .badge-standard {
+        background-color: #007bff;
+        color: white;
+    }
+
+    /* Кнопки действий */
+    .action-buttons {
+        position: sticky;
+        bottom: 0;
+        background: white;
+        padding: 15px;
+        border-top: 1px solid #dee2e6;
+        margin-top: 20px;
+        border-radius: 0 0 10px 10px;
+    }
+
+    /* Карточки шаблонов */
+    .template-card {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+        .template-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-color: #dc3545;
+        }
+
+        .template-card.selected {
+            background-color: #ffeaea;
+            border-color: #dc3545;
+            border-left: 4px solid #dc3545;
+        }
+
+    .template-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 15px;
+        color: white;
+        font-size: 1.2rem;
+    }
+
+    /* Индикаторы срочности */
+    .urgency-indicator {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 5px;
+    }
+
+    .urgency-high {
+        background-color: #dc3545;
+    }
+
+    .urgency-medium {
+        background-color: #fd7e14;
+    }
+
+    .urgency-low {
+        background-color: #28a745;
+    }
+</style>
+
+<div class="container-fluid">
+    <!-- Заголовок страницы -->
+    <div class="page-header mb-4" style="background: linear-gradient(135deg, #dc3545 0%, #a71d2a 100%); color: white; padding: 2rem; border-radius: 10px;">
+        <h1 class="display-4 mb-3">Блок внеплановых работ</h1>
+        <p class="lead mb-0">Управление аварийными и внеплановыми работами. Быстрое создание работ на основе типовых сценариев.</p>
+    </div>
+
+    <!-- Панель создания новой внеплановой работы -->
+    <div class="creation-panel pulse-animation">
+        <h4><i class="fas fa-plus-circle me-2"></i>Создать новую внеплановую работу</h4>
+
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label">Тип события:</label>
+                    <select class="form-select" id="eventType" onchange="updateTemplateList()">
+                        <option value="">-- Выберите тип события --</option>
+                        <option value="emergency">Аварийный простой</option>
+                        <option value="breakdown">Поломка оборудования</option>
+                        <option value="incident">Производственный инцидент</option>
+                        <option value="inspection">Внеплановая проверка</option>
+                        <option value="other">Другое</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Название работы:</label>
+                    <input type="text" class="form-control" id="workTitle" placeholder="Например: Устранение утечки в системе">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Описание проблемы:</label>
+                    <textarea class="form-control" id="workDescription" rows="3" placeholder="Подробное описание ситуации..."></textarea>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label">Приоритет:</label>
+                    <select class="form-select" id="workPriority">
+                        <option value="high">Высокий (Аварийная ситуация)</option>
+                        <option value="medium">Средний (Срочная работа)</option>
+                        <option value="low">Низкий (Текущее устранение)</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Подразделение:</label>
+                    <select class="form-select" id="workDepartment">
+                        <option value="maintenance">Техническое обслуживание</option>
+                        <option value="otipb">ОТиПБ</option>
+                        <option value="engineering">Инжиниринг</option>
+                        <option value="production">Производство</option>
+                        <option value="energy">Энергетика</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Место проведения:</label>
+                    <input type="text" class="form-control" id="workLocation" placeholder="Цех №5, участок разгрузки">
+                </div>
+            </div>
+        </div>
+
+        <!-- Шаблоны операций -->
+        <div id="templatesSection" style="display: none;">
+            <h5 class="mb-3"><i class="fas fa-clipboard-list me-2"></i>Выберите шаблон операций:</h5>
+            <div class="row" id="templatesContainer">
+                <!-- Шаблоны будут добавлены через JavaScript -->
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn btn-danger" onclick="createNewWork()">
+                <i class="fas fa-bolt me-2"></i>Создать внеплановую работу
+            </button>
+            <button class="btn btn-outline-secondary" onclick="clearCreationForm()">
+                <i class="fas fa-times me-2"></i>Очистить форму
+            </button>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Левая колонка: Чек-лист внеплановых работ -->
+        <div class="col-lg-4">
+            <div class="checklist-container">
+                <div class="checklist-header">
+                    <h4 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Активные внеплановые работы</h4>
+                    <small>Выберите работу для управления операциями</small>
+                </div>
+
+                <div id="checklist">
+                    <!-- Работы будут добавлены через JavaScript -->
+                </div>
+
+                <!-- Статистика -->
+                <div class="mt-4 p-3 bg-light rounded">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <h5 id="totalWorks">0</h5>
+                            <small class="text-muted">Всего работ</small>
+                        </div>
+                        <div class="col-4">
+                            <h5 id="emergencyWorks">0</h5>
+                            <small class="text-muted">Аварийные</small>
+                        </div>
+                        <div class="col-4">
+                            <h5 id="inProgressWorks">0</h5>
+                            <small class="text-muted">В работе</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Центральная колонка: Таблица операций -->
+        <div class="col-lg-8">
+            <div class="operations-container" style="max-height: 600px; overflow-y: auto;">
+                <h4 class="mb-4"><i class="fas fa-cogs me-2"></i>Операции для выбранной работы</h4>
+                <p class="text-muted mb-4" id="selectedWorkTitle">Выберите работу из списка слева</p>
+
+                <div class="alert alert-warning mb-3" id="emergencyWarning" style="display: none;">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <strong>Внимание! Аварийная работа.</strong> Требуется оперативное выполнение всех операций.
+                </div>
+
+                <table class="operations-table">
+                    <thead>
+                        <tr>
+                            <th width="50"></th>
+                            <th>Операция</th>
+                            <th>Статус</th>
+                            <th>Ответственный</th>
+                            <th>Трудозатраты</th>
+                            <th>Прогресс</th>
+                        </tr>
+                    </thead>
+                    <tbody id="operationsTableBody">
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-5">
+                                <i class="fas fa-info-circle fa-2x mb-3 d-block"></i>
+                                Выберите работу для отображения операций
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="action-buttons">
+                    <button class="btn btn-outline-danger" onclick="addEmergencyOperation()" disabled id="addOperationBtn">
+                        <i class="fas fa-plus-circle me-2"></i>Добавить срочную операцию
+                    </button>
+                    <button class="btn btn-danger float-end" onclick="completeEmergencyWork()" disabled id="completeWorkBtn">
+                        <i class="fas fa-check-double me-2"></i>Завершить работу
+                    </button>
+                </div>
+            </div>
+
+            <!-- Панель управления выбранной операцией -->
+            <div class="control-panel mt-4">
+                <h4 class="mb-4"><i class="fas fa-sliders-h me-2"></i>Управление операцией</h4>
+                <p class="text-muted mb-4" id="selectedOperationTitle">Выберите операцию из таблицы выше</p>
+
+                <div class="row">
+                    <!-- Секция 1: Статус операции -->
+                    <div class="col-md-6">
+                        <div class="control-section emergency">
+                            <h5><i class="fas fa-flag me-2"></i>Статус операции</h5>
+                            <div class="d-flex flex-wrap mb-3">
+                                <button class="btn status-btn btn-outline-secondary" onclick="changeOperationStatus('new')">
+                                    Новая
+                                </button>
+                                <button class="btn status-btn btn-outline-primary" onclick="changeOperationStatus('inprogress')">
+                                    В работе
+                                </button>
+                                <button class="btn status-btn btn-outline-success" onclick="changeOperationStatus('completed')">
+                                    Выполнено
+                                </button>
+                                <button class="btn status-btn btn-outline-danger" onclick="changeOperationStatus('delayed')">
+                                    Задержка
+                                </button>
+                                <button class="btn status-btn btn-outline-dark" onclick="changeOperationStatus('cancelled')">
+                                    Отменено
+                                </button>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Текущий статус:</label>
+                                <div class="form-control" id="currentStatusDisplay">Не выбрано</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Секция 2: Причины и риски -->
+                    <div class="col-md-6">
+                        <div class="control-section urgent">
+                            <h5><i class="fas fa-exclamation-triangle me-2"></i>Причины и риски</h5>
+                            <div class="mb-3">
+                                <label class="form-label">Причина невыполнения:</label>
+                                <select class="form-select" id="reasonSelect" onchange="updateOperationReason()" disabled>
+                                    <option value="">-- Выберите причину --</option>
+                                    <option value="no_materials">Отсутствие материалов/запчастей</option>
+                                    <option value="no_personnel">Недостаток квалифицированного персонала</option>
+                                    <option value="safety_risk">Риск для безопасности</option>
+                                    <option value="weather">Невозможность проведения из-за погоды</option>
+                                    <option value="equipment_failure">Дополнительная поломка</option>
+                                    <option value="other">Другая причина</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Уровень риска:</label>
+                                <select class="form-select" id="riskLevel" onchange="updateRiskLevel()" disabled>
+                                    <option value="low">Низкий</option>
+                                    <option value="medium">Средний</option>
+                                    <option value="high">Высокий</option>
+                                    <option value="critical">Критический</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <!-- Секция 3: Назначение персонала -->
+                    <div class="col-md-6">
+                        <div class="control-section standard">
+                            <h5><i class="fas fa-users me-2"></i>Назначение персонала</h5>
+                            <div class="mb-3">
+                                <label class="form-label">Выберите ответственного:</label>
+                                <select class="form-select" id="personnelSelect" onchange="updateOperationPersonnel()" disabled>
+                                    <option value="">-- Выберите сотрудника --</option>
+                                    <option value="emergency_team">Аварийная бригада</option>
+                                    <option value="ivanov">Иванов А.П. (Специалист ОТиПБ)</option>
+                                    <option value="petrova">Петрова С.И. (Инженер ОТиПБ)</option>
+                                    <option value="sidorov">Сидоров В.М. (Аварийный механик)</option>
+                                    <option value="kuznetsov">Кузнецов Д.А. (Инженер КИП)</option>
+                                    <option value="vasiliev">Васильев П.С. (Начальник смены)</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Количество исполнителей:</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="personnelCount"
+                                           min="1" max="10" value="1"
+                                           onchange="updatePersonnelCount()" disabled>
+                                    <span class="input-group-text">чел.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Секция 4: Трудозатраты и время -->
+                    <div class="col-md-6">
+                        <div class="control-section emergency">
+                            <h5><i class="fas fa-clock me-2"></i>Трудозатраты и время</h5>
+                            <div class="mb-3">
+                                <label class="form-label">Плановое время выполнения:</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="plannedHours"
+                                           min="0" step="0.5" value="0"
+                                           onchange="updatePlannedHours()" disabled>
+                                    <span class="input-group-text">часов</span>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Фактическое время:</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="actualHours"
+                                           min="0" step="0.5" value="0"
+                                           onchange="updateActualHours()" disabled>
+                                    <span class="input-group-text">часов</span>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Осталось времени:</label>
+                                <div class="form-control" id="timeRemaining">0 ч</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Кнопки управления -->
+                <div class="action-buttons">
+                    <button class="btn btn-danger" onclick="saveOperationChanges()" disabled id="saveOperationBtn">
+                        <i class="fas fa-save me-2"></i>Сохранить изменения операции
+                    </button>
+                    <button class="btn btn-outline-warning float-end" onclick="escalateOperation()" disabled id="escalateBtn">
+                        <i class="fas fa-bullhorn me-2"></i>Эскалировать проблему
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно для эскалации -->
+<div class="modal fade" id="escalationModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title">Эскалация проблемы</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Уровень эскалации:</label>
+                    <select class="form-select" id="escalationLevel">
+                        <option value="supervisor">Начальнику смены</option>
+                        <option value="department">Руководителю подразделения</option>
+                        <option value="director">Техническому директору</option>
+                        <option value="general">Генеральному директору</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Причина эскалации:</label>
+                    <textarea class="form-control" id="escalationReason" rows="3"
+                              placeholder="Опишите причину эскалации проблемы..."></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Требуемые действия:</label>
+                    <textarea class="form-control" id="requiredActions" rows="3"
+                              placeholder="Какие действия требуются от руководства..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-warning" onclick="confirmEscalation()">Отправить эскалацию</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // Шаблоны операций для разных типов событий
+    const operationTemplates = {
+        emergency: [
+            {
+                id: 'emergency_template',
+                name: 'Аварийный простой оборудования',
+                description: 'Стандартный набор операций при аварийном простое',
+                icon: 'fa-bolt',
+                color: '#dc3545',
+                operations: [
+                    { id: 1, name: 'Остановка оборудования', description: 'Безопасная остановка оборудования', duration: 0.5 },
+                    { id: 2, name: 'Оценка ситуации', description: 'Первичная оценка масштаба проблемы', duration: 1 },
+                    { id: 3, name: 'Вызов аварийной бригады', description: 'Оповещение и вызов специалистов', duration: 0.5 },
+                    { id: 4, name: 'Обеспечение безопасности', description: 'Ограждение зоны, предупреждающие знаки', duration: 1 },
+                    { id: 5, name: 'Первичный ремонт', description: 'Временное устранение проблемы', duration: 4 },
+                    { id: 6, name: 'Запуск оборудования', description: 'Контрольный запуск после ремонта', duration: 2 },
+                    { id: 7, name: 'Составление акта', description: 'Документирование инцидента', duration: 1 }
+                ]
+            },
+            {
+                id: 'breakdown_template',
+                name: 'Внезапная поломка',
+                description: 'Операции при внезапной поломке оборудования',
+                icon: 'fa-cogs',
+                color: '#fd7e14',
+                operations: [
+                    { id: 1, name: 'Диагностика поломки', description: 'Определение причины и масштаба', duration: 2 },
+                    { id: 2, name: 'Заказ запчастей', description: 'Срочный заказ необходимых деталей', duration: 1 },
+                    { id: 3, name: 'Демонтаж оборудования', description: 'Разборка поврежденных узлов', duration: 3 },
+                    { id: 4, name: 'Замена деталей', description: 'Установка новых компонентов', duration: 4 },
+                    { id: 5, name: 'Тестирование', description: 'Проверка работоспособности', duration: 2 }
+                ]
+            }
+        ],
+        incident: [
+            {
+                id: 'incident_template',
+                name: 'Производственный инцидент',
+                description: 'Действия при производственном инциденте',
+                icon: 'fa-exclamation-triangle',
+                color: '#ffc107',
+                operations: [
+                    { id: 1, name: 'Оказание первой помощи', description: 'При необходимости', duration: 0.5 },
+                    { id: 2, name: 'Оповещение руководства', description: 'Доклад о произошедшем', duration: 0.5 },
+                    { id: 3, name: 'Сохранение обстановки', description: 'Фиксация условий инцидента', duration: 1 },
+                    { id: 4, name: 'Расследование', description: 'Выяснение причин инцидента', duration: 4 },
+                    { id: 5, name: 'Разработка мер', description: 'Меры по предотвращению', duration: 3 },
+                    { id: 6, name: 'Внедрение мер', description: 'Реализация корректирующих действий', duration: 8 }
+                ]
+            }
+        ],
+        inspection: [
+            {
+                id: 'inspection_template',
+                name: 'Внеплановая проверка',
+                description: 'Подготовка к внеплановой проверке',
+                icon: 'fa-clipboard-check',
+                color: '#17a2b8',
+                operations: [
+                    { id: 1, name: 'Сбор документации', description: 'Подготовка необходимых документов', duration: 4 },
+                    { id: 2, name: 'Проверка оборудования', description: 'Контрольная проверка состояния', duration: 6 },
+                    { id: 3, name: 'Подготовка помещений', description: 'Приведение в порядок рабочих зон', duration: 8 },
+                    { id: 4, name: 'Инструктаж персонала', description: 'Подготовка к взаимодействию с проверяющими', duration: 2 }
+                ]
+            }
+        ]
+    };
+
+    // Данные для внеплановых работ
+    let unscheduledWorks = [
+        {
+            id: 1,
+            title: 'Устранение утечки в гидросистеме пресса',
+            code: 'EMERG-2025-001',
+            department: 'Техническое обслуживание',
+            priority: 'high',
+            type: 'emergency',
+            status: 'inprogress',
+            progress: 40,
+            created: '2025-01-15 14:30',
+            location: 'Цех №3, прессовый участок',
+            description: 'Обнаружена утечка гидравлической жидкости из основного цилиндра пресса. Риск возгорания.',
+            operations: [
+                { id: 1, name: 'Остановка пресса', status: 'completed', personnel: 'Аварийная бригада', hours: { planned: 0.5, actual: 0.5 }, risk: 'high' },
+                { id: 2, name: 'Эвакуация персонала', status: 'completed', personnel: 'Иванов А.П.', hours: { planned: 0.5, actual: 0.5 }, risk: 'critical' },
+                { id: 3, name: 'Локализация утечки', status: 'inprogress', personnel: 'Сидоров В.М.', hours: { planned: 2, actual: 1 }, risk: 'high' },
+                { id: 4, name: 'Замена уплотнений', status: 'new', personnel: '', hours: { planned: 4, actual: 0 }, risk: 'medium' },
+                { id: 5, name: 'Заправка системы', status: 'new', personnel: '', hours: { planned: 2, actual: 0 }, risk: 'low' },
+                { id: 6, name: 'Тестовый запуск', status: 'new', personnel: '', hours: { planned: 1, actual: 0 }, risk: 'medium' }
+            ]
+        },
+        {
+            id: 2,
+            title: 'Ремонт вентилятора вытяжной системы',
+            code: 'URGENT-2025-008',
+            department: 'Энергетика',
+            priority: 'medium',
+            type: 'breakdown',
+            status: 'new',
+            progress: 0,
+            created: '2025-01-15 10:15',
+            location: 'Вентиляционная камера №2',
+            description: 'Выход из строя основного вентилятора вытяжной системы. Снижена эффективность вентиляции.',
+            operations: [
+                { id: 1, name: 'Диагностика электродвигателя', status: 'new', personnel: '', hours: { planned: 2, actual: 0 }, risk: 'medium' },
+                { id: 2, name: 'Замена подшипников', status: 'new', personnel: '', hours: { planned: 3, actual: 0 }, risk: 'medium' },
+                { id: 3, name: 'Балансировка ротора', status: 'new', personnel: '', hours: { planned: 2, actual: 0 }, risk: 'low' }
+            ]
+        },
+        {
+            id: 3,
+            title: 'Устранение засора в канализационной системе',
+            code: 'EMERG-2025-002',
+            department: 'Техническое обслуживание',
+            priority: 'high',
+            type: 'emergency',
+            status: 'completed',
+            progress: 100,
+            created: '2025-01-14 08:45',
+            location: 'Блок очистных сооружений',
+            description: 'Аварийный засор в магистральной канализационной линии. Риск затопления.',
+            operations: [
+                { id: 1, name: 'Отключение участка', status: 'completed', personnel: 'Аварийная бригада', hours: { planned: 1, actual: 1 }, risk: 'high' },
+                { id: 2, name: 'Прочистка гидродинамическим способом', status: 'completed', personnel: 'Сидоров В.М.', hours: { planned: 3, actual: 2.5 }, risk: 'medium' },
+                { id: 3, name: 'Проверка проходимости', status: 'completed', personnel: 'Кузнецов Д.А.', hours: { planned: 1, actual: 1 }, risk: 'low' },
+                { id: 4, name: 'Восстановление работы', status: 'completed', personnel: 'Аварийная бригада', hours: { planned: 2, actual: 2 }, risk: 'medium' }
+            ]
+        }
+    ];
+
+    let selectedWorkId = null;
+    let selectedOperationId = null;
+    let currentOperationData = null;
+    let selectedTemplate = null;
+
+    // Инициализация при загрузке страницы
+    document.addEventListener('DOMContentLoaded', function() {
+        renderChecklist();
+        updateStatistics();
+
+        // Инициализация модальных окон Bootstrap
+        new bootstrap.Modal(document.getElementById('escalationModal'));
+    });
+
+    // Обновление списка шаблонов
+    function updateTemplateList() {
+        const eventType = document.getElementById('eventType').value;
+        const templatesContainer = document.getElementById('templatesContainer');
+        const templatesSection = document.getElementById('templatesSection');
+
+        if (!eventType || !operationTemplates[eventType]) {
+            templatesSection.style.display = 'none';
+            selectedTemplate = null;
+            return;
+        }
+
+        templatesSection.style.display = 'block';
+        templatesContainer.innerHTML = '';
+        selectedTemplate = null;
+
+        operationTemplates[eventType].forEach(template => {
+            const templateCard = document.createElement('div');
+            templateCard.className = 'col-md-6';
+            templateCard.innerHTML = `
+                <div class="template-card" onclick="selectTemplate('${template.id}', '${eventType}')">
+                    <div class="d-flex align-items-center">
+                        <div class="template-icon" style="background-color: ${template.color}">
+                            <i class="fas ${template.icon}"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-1">${template.name}</h6>
+                            <p class="text-muted mb-0 small">${template.description}</p>
+                            <small class="text-muted">${template.operations.length} операций</small>
+                        </div>
+                    </div>
+                </div>
+            `;
+            templatesContainer.appendChild(templateCard);
+        });
+    }
+
+    // Выбор шаблона
+    function selectTemplate(templateId, eventType) {
+        selectedTemplate = operationTemplates[eventType].find(t => t.id === templateId);
+
+        // Снимаем выделение со всех карточек
+        document.querySelectorAll('.template-card').forEach(card => {
+            card.classList.remove('selected');
+        });
+
+        // Выделяем выбранную карточку
+        event.target.closest('.template-card').classList.add('selected');
+
+        // Автоматически заполняем название работы
+        if (!document.getElementById('workTitle').value) {
+            document.getElementById('workTitle').value = selectedTemplate.name;
+        }
+    }
+
+    // Создание новой внеплановой работы
+    function createNewWork() {
+        const title = document.getElementById('workTitle').value;
+        const description = document.getElementById('workDescription').value;
+        const priority = document.getElementById('workPriority').value;
+        const department = document.getElementById('workDepartment').value;
+        const location = document.getElementById('workLocation').value;
+        const eventType = document.getElementById('eventType').value;
+
+        if (!title.trim() || !eventType) {
+            showNotification('Заполните обязательные поля: тип события и название работы', 'warning');
+            return;
+        }
+
+        // Генерируем ID и код
+        const newId = unscheduledWorks.length > 0 ?
+            Math.max(...unscheduledWorks.map(w => w.id)) + 1 : 1;
+
+        const codePrefix = priority === 'high' ? 'EMERG' : priority === 'medium' ? 'URGENT' : 'UNSCHED';
+        const code = `${codePrefix}-2025-${String(newId).padStart(3, '0')}`;
+
+        // Создаем операции из шаблона или по умолчанию
+        let operations = [];
+        if (selectedTemplate) {
+            operations = selectedTemplate.operations.map((op, index) => ({
+                id: index + 1,
+                name: op.name,
+                status: 'new',
+                personnel: '',
+                hours: { planned: op.duration, actual: 0 },
+                risk: 'medium',
+                description: op.description
+            }));
+        } else {
+            // Стандартные операции по умолчанию
+            operations = [
+                { id: 1, name: 'Первичная оценка ситуации', status: 'new', personnel: '', hours: { planned: 1, actual: 0 }, risk: 'medium' },
+                { id: 2, name: 'Разработка плана действий', status: 'new', personnel: '', hours: { planned: 2, actual: 0 }, risk: 'low' },
+                { id: 3, name: 'Выполнение работ', status: 'new', personnel: '', hours: { planned: 4, actual: 0 }, risk: 'medium' }
+            ];
+        }
+
+        // Создаем новую работу
+        const newWork = {
+            id: newId,
+            title: title,
+            code: code,
+            department: department,
+            priority: priority,
+            type: eventType,
+            status: 'new',
+            progress: 0,
+            created: new Date().toISOString().slice(0, 16).replace('T', ' '),
+            location: location,
+            description: description,
+            operations: operations
+        };
+
+        unscheduledWorks.push(newWork);
+
+        // Очищаем форму
+        clearCreationForm();
+
+        // Обновляем интерфейс
+        renderChecklist();
+        updateStatistics();
+
+        // Автоматически выбираем созданную работу
+        setTimeout(() => selectWork(newId), 100);
+
+        showNotification(`Внеплановая работа "${title}" создана`, 'success');
+    }
+
+    // Очистка формы создания
+    function clearCreationForm() {
+        document.getElementById('workTitle').value = '';
+        document.getElementById('workDescription').value = '';
+        document.getElementById('workLocation').value = '';
+        document.getElementById('eventType').value = '';
+        document.getElementById('templatesSection').style.display = 'none';
+        selectedTemplate = null;
+    }
+
+    // Рендеринг чек-листа
+    function renderChecklist() {
+        const checklist = document.getElementById('checklist');
+        checklist.innerHTML = '';
+
+        // Сортируем работы: сначала аварийные, потом новые, потом в работе
+        const sortedWorks = [...unscheduledWorks].sort((a, b) => {
+            if (a.priority === 'high' && b.priority !== 'high') return -1;
+            if (a.priority !== 'high' && b.priority === 'high') return 1;
+            if (a.status === 'new' && b.status !== 'new') return -1;
+            if (a.status !== 'new' && b.status === 'new') return 1;
+            return 0;
+        });
+
+        sortedWorks.forEach(work => {
+            const priorityBadge = work.priority === 'high' ?
+                '<span class="badge badge-emergency work-badge"><i class="fas fa-exclamation-circle me-1"></i> Аварийная</span>' :
+                work.priority === 'medium' ?
+                '<span class="badge badge-urgent work-badge"><i class="fas fa-clock me-1"></i> Срочная</span>' :
+                '<span class="badge badge-standard work-badge">Обычная</span>';
+
+            const statusBadge = getStatusBadge(work.status);
+            const urgencyClass = work.priority === 'high' ? 'urgency-high' :
+                                work.priority === 'medium' ? 'urgency-medium' : 'urgency-low';
+
+            const item = document.createElement('div');
+            item.className = `checklist-item ${selectedWorkId === work.id ? 'selected' : ''}`;
+            item.innerHTML = `
+                <div class="d-flex align-items-start">
+                    <input type="radio" class="work-radio" name="workSelection"
+                           id="work${work.id}"
+                           ${selectedWorkId === work.id ? 'checked' : ''}
+                           onclick="selectWork(${work.id})">
+                    <div class="flex-grow-1 ms-3">
+                        <label for="work${work.id}" class="work-label">
+                            <span class="${urgencyClass} urgency-indicator"></span>
+                            ${work.title}
+                        </label>
+                        <div class="work-meta">
+                            <span class="me-3"><i class="fas fa-hashtag"></i> ${work.code}</span>
+                            <span class="me-3"><i class="fas fa-building"></i> ${work.department}</span>
+                            ${priorityBadge}
+                            ${statusBadge}
+                        </div>
+                        <div class="work-meta">
+                            <small><i class="fas fa-map-marker-alt me-1"></i> ${work.location}</small>
+                            <small class="ms-3"><i class="fas fa-calendar me-1"></i> ${work.created}</small>
+                        </div>
+                        <div class="progress-indicator">
+                            <div class="progress-fill ${getProgressClass(work.status)}"
+                                 style="width: ${work.progress}%"></div>
+                        </div>
+                        <small class="text-muted">${work.progress}% выполнено</small>
+                    </div>
+                </div>
+            `;
+
+            checklist.appendChild(item);
+        });
+    }
+
+    // Выбор работы
+    function selectWork(workId) {
+        selectedWorkId = workId;
+        selectedOperationId = null;
+        currentOperationData = null;
+
+        renderChecklist();
+        renderOperationsTable();
+        updateControlPanel();
+
+        // Активируем кнопки
+        document.getElementById('addOperationBtn').disabled = false;
+        document.getElementById('completeWorkBtn').disabled = false;
+        document.getElementById('escalateBtn').disabled = false;
+
+        // Обновляем заголовок и предупреждение
+        const work = unscheduledWorks.find(w => w.id === workId);
+        document.getElementById('selectedWorkTitle').innerHTML = `
+            <strong>${work.title}</strong>
+            <span class="text-muted">(${work.code})</span>
+            <br>
+            <small class="text-muted">${work.description}</small>
+        `;
+
+        // Показываем предупреждение для аварийных работ
+        const warning = document.getElementById('emergencyWarning');
+        if (work.priority === 'high') {
+            warning.style.display = 'block';
+        } else {
+            warning.style.display = 'none';
+        }
+    }
+
+    // Рендеринг таблицы операций
+    function renderOperationsTable() {
+        const tableBody = document.getElementById('operationsTableBody');
+
+        if (!selectedWorkId) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-5">
+                        <i class="fas fa-info-circle fa-2x mb-3 d-block"></i>
+                        Выберите работу для отображения операций
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        const work = unscheduledWorks.find(w => w.id === selectedWorkId);
+        tableBody.innerHTML = '';
+
+        work.operations.forEach(op => {
+            const statusBadge = getStatusBadge(op.status);
+            const personnel = op.personnel || '<span class="text-muted">Не назначен</span>';
+            const hours = `${op.hours.actual}/${op.hours.planned} ч`;
+            const riskBadge = op.risk ? `<span class="badge bg-${getRiskColor(op.risk)} ms-2">${getRiskText(op.risk)}</span>` : '';
+
+            const row = document.createElement('tr');
+            row.className = selectedOperationId === op.id ? 'selected' : '';
+            row.onclick = () => selectOperation(op.id);
+            row.innerHTML = `
+                <td>
+                    <input type="radio" name="operationSelection"
+                           onclick="selectOperation(${op.id})"
+                           ${selectedOperationId === op.id ? 'checked' : ''}>
+                </td>
+                <td>
+                    <strong>${op.name}</strong>
+                    ${op.description ? '<br><small class="text-muted">' + op.description + '</small>' : ''}
+                </td>
+                <td>${statusBadge} ${riskBadge}</td>
+                <td>${personnel}</td>
+                <td>${hours}</td>
+                <td>
+                    <div class="progress-indicator">
+                        <div class="progress-fill ${getProgressClass(op.status)}"
+                             style="width: ${op.hours.planned > 0 ? (op.hours.actual / op.hours.planned * 100) : 0}%"></div>
+                    </div>
+                    <small>${op.hours.planned > 0 ? Math.round(op.hours.actual / op.hours.planned * 100) : 0}%</small>
+                </td>
+            `;
+
+            tableBody.appendChild(row);
+        });
+    }
+
+    // Выбор операции
+    function selectOperation(operationId) {
+        selectedOperationId = operationId;
+        const work = unscheduledWorks.find(w => w.id === selectedWorkId);
+        currentOperationData = work.operations.find(op => op.id === operationId);
+
+        renderOperationsTable();
+        updateControlPanel();
+
+        // Активируем элементы управления
+        document.getElementById('saveOperationBtn').disabled = false;
+        document.getElementById('reasonSelect').disabled = false;
+        document.getElementById('riskLevel').disabled = false;
+        document.getElementById('personnelSelect').disabled = false;
+        document.getElementById('personnelCount').disabled = false;
+        document.getElementById('plannedHours').disabled = false;
+        document.getElementById('actualHours').disabled = false;
+
+        // Обновляем заголовок
+        document.getElementById('selectedOperationTitle').innerHTML = `
+            <strong>${currentOperationData.name}</strong>
+            ${currentOperationData.description ? '<br><small class="text-muted">' + currentOperationData.description + '</small>' : ''}
+        `;
+    }
+
+    // Обновление панели управления
+    function updateControlPanel() {
+        if (!currentOperationData) {
+            resetControlPanel();
+            return;
+        }
+
+        // Статус
+        const statusText = getStatusText(currentOperationData.status);
+        document.getElementById('currentStatusDisplay').textContent = statusText;
+        document.getElementById('currentStatusDisplay').className = `form-control status-${currentOperationData.status}`;
+
+        // Риск
+        if (currentOperationData.risk) {
+            document.getElementById('riskLevel').value = currentOperationData.risk;
+        }
+
+        // Персонал
+        if (currentOperationData.personnel) {
+            const personnelValue = getPersonnelValue(currentOperationData.personnel);
+            document.getElementById('personnelSelect').value = personnelValue;
+        } else {
+            document.getElementById('personnelSelect').value = '';
+        }
+
+        // Трудозатраты
+        document.getElementById('plannedHours').value = currentOperationData.hours.planned;
+        document.getElementById('actualHours').value = currentOperationData.hours.actual;
+
+        // Оставшееся время
+        const remaining = Math.max(0, currentOperationData.hours.planned - currentOperationData.hours.actual);
+        document.getElementById('timeRemaining').textContent = `${remaining.toFixed(1)} ч`;
+        document.getElementById('timeRemaining').className = `form-control ${remaining > 0 ? 'text-success' : 'text-danger'}`;
+    }
+
+    function resetControlPanel() {
+        document.getElementById('currentStatusDisplay').textContent = 'Не выбрано';
+        document.getElementById('currentStatusDisplay').className = 'form-control';
+        document.getElementById('reasonSelect').value = '';
+        document.getElementById('riskLevel').value = 'low';
+        document.getElementById('personnelSelect').value = '';
+        document.getElementById('personnelCount').value = 1;
+        document.getElementById('plannedHours').value = 0;
+        document.getElementById('actualHours').value = 0;
+        document.getElementById('timeRemaining').textContent = '0 ч';
+    }
+
+    // Изменение статуса операции
+    function changeOperationStatus(status) {
+        if (!currentOperationData) return;
+
+        currentOperationData.status = status;
+        updateControlPanel();
+
+        // Обновляем прогресс работы
+        updateWorkProgress(selectedWorkId);
+    }
+
+    // Обновление причины
+    function updateOperationReason() {
+        // Можно добавить логику сохранения причины
+        console.log('Причина обновлена:', document.getElementById('reasonSelect').value);
+    }
+
+    // Обновление уровня риска
+    function updateRiskLevel() {
+        if (!currentOperationData) return;
+
+        currentOperationData.risk = document.getElementById('riskLevel').value;
+    }
+
+    // Обновление персонала
+    function updateOperationPersonnel() {
+        if (!currentOperationData) return;
+
+        const select = document.getElementById('personnelSelect');
+        if (select.value) {
+            if (select.value === 'emergency_team') {
+                currentOperationData.personnel = 'Аварийная бригада';
+            } else {
+                const personnelText = select.options[select.selectedIndex].text.split(' (')[0];
+                currentOperationData.personnel = personnelText;
+            }
+        } else {
+            currentOperationData.personnel = '';
+        }
+    }
+
+    function updatePersonnelCount() {
+        console.log('Количество персонала обновлено:', document.getElementById('personnelCount').value);
+    }
+
+    // Обновление трудозатрат
+    function updatePlannedHours() {
+        if (!currentOperationData) return;
+
+        currentOperationData.hours.planned = parseFloat(document.getElementById('plannedHours').value) || 0;
+        updateTimeRemaining();
+    }
+
+    function updateActualHours() {
+        if (!currentOperationData) return;
+
+        currentOperationData.hours.actual = parseFloat(document.getElementById('actualHours').value) || 0;
+        updateTimeRemaining();
+    }
+
+    function updateTimeRemaining() {
+        if (!currentOperationData) return;
+
+        const remaining = Math.max(0, currentOperationData.hours.planned - currentOperationData.hours.actual);
+        document.getElementById('timeRemaining').textContent = `${remaining.toFixed(1)} ч`;
+        document.getElementById('timeRemaining').className = `form-control ${remaining > 0 ? 'text-success' : 'text-danger'}`;
+    }
+
+    // Добавление срочной операции
+    function addEmergencyOperation() {
+        if (!selectedWorkId) return;
+
+        const work = unscheduledWorks.find(w => w.id === selectedWorkId);
+        const newOpId = work.operations.length > 0 ?
+            Math.max(...work.operations.map(op => op.id)) + 1 : 1;
+
+        const emergencyOperations = [
+            'Срочный вызов специалиста',
+            'Дополнительная диагностика',
+            'Аварийное отключение',
+            'Экстренная эвакуация',
+            'Контрольный замер параметров'
+        ];
+
+        const randomOp = emergencyOperations[Math.floor(Math.random() * emergencyOperations.length)];
+
+        work.operations.push({
+            id: newOpId,
+            name: randomOp,
+            status: 'new',
+            personnel: '',
+            hours: { planned: 2, actual: 0 },
+            risk: 'high'
+        });
+
+        renderOperationsTable();
+        updateWorkProgress(selectedWorkId);
+
+        showNotification('Срочная операция добавлена', 'warning');
+    }
+
+    // Завершение работы
+    function completeEmergencyWork() {
+        if (!selectedWorkId) return;
+
+        const work = unscheduledWorks.find(w => w.id === selectedWorkId);
+
+        // Проверяем, все ли операции завершены
+        const allCompleted = work.operations.every(op => op.status === 'completed');
+
+        if (!allCompleted) {
+            if (!confirm('Не все операции завершены. Завершить работу досрочно?')) {
+                return;
+            }
+        }
+
+        work.status = 'completed';
+        work.progress = 100;
+
+        renderChecklist();
+        updateStatistics();
+
+        showNotification(`Работа "${work.title}" завершена`, 'success');
+    }
+
+    // Эскалация проблемы
+    function escalateOperation() {
+        const modal = new bootstrap.Modal(document.getElementById('escalationModal'));
+        modal.show();
+    }
+
+    function confirmEscalation() {
+        const level = document.getElementById('escalationLevel').value;
+        const reason = document.getElementById('escalationReason').value;
+        const actions = document.getElementById('requiredActions').value;
+
+        if (!reason.trim()) {
+            showNotification('Укажите причину эскалации', 'warning');
+            return;
+        }
+
+        // Закрываем модальное окно
+        const modal = bootstrap.Modal.getInstance(document.getElementById('escalationModal'));
+        modal.hide();
+
+        // Очищаем форму
+        document.getElementById('escalationReason').value = '';
+        document.getElementById('requiredActions').value = '';
+
+        // Логируем эскалацию
+        console.log('Эскалация отправлена:', { level, reason, actions });
+
+        showNotification('Проблема эскалирована руководству', 'warning');
+    }
+
+    // Сохранение изменений операции
+    function saveOperationChanges() {
+        if (!currentOperationData || !selectedWorkId) return;
+
+        updateWorkProgress(selectedWorkId);
+        renderOperationsTable();
+
+        showNotification('Изменения операции сохранены', 'success');
+    }
+
+    // Обновление статистики
+    function updateStatistics() {
+        const totalWorks = unscheduledWorks.length;
+        const emergencyWorks = unscheduledWorks.filter(w => w.priority === 'high').length;
+        const inProgressWorks = unscheduledWorks.filter(w => w.status === 'inprogress').length;
+
+        document.getElementById('totalWorks').textContent = totalWorks;
+        document.getElementById('emergencyWorks').textContent = emergencyWorks;
+        document.getElementById('inProgressWorks').textContent = inProgressWorks;
+    }
+
+    // Обновление прогресса работы
+    function updateWorkProgress(workId) {
+        const work = unscheduledWorks.find(w => w.id === workId);
+        if (!work || !work.operations.length) return;
+
+        const totalOps = work.operations.length;
+        const completedOps = work.operations.filter(op => op.status === 'completed').length;
+        const inProgressOps = work.operations.filter(op => op.status === 'inprogress').length;
+
+        // Рассчитываем прогресс: 100% за выполненные, 50% за в работе
+        work.progress = Math.round((completedOps * 100 + inProgressOps * 50) / totalOps);
+
+        // Обновляем статус работы
+        if (work.progress === 100) {
+            work.status = 'completed';
+        } else if (work.operations.some(op => op.status === 'delayed')) {
+            work.status = 'delayed';
+        } else if (work.operations.some(op => op.status === 'inprogress')) {
+            work.status = 'inprogress';
+        } else if (work.operations.some(op => op.status === 'new')) {
+            work.status = 'new';
+        }
+
+        renderChecklist();
+        updateStatistics();
+    }
+
+    // Вспомогательные функции
+    function getStatusBadge(status) {
+        const badges = {
+            'new': '<span class="badge bg-secondary work-badge">Новая</span>',
+            'inprogress': '<span class="badge bg-primary work-badge">В работе</span>',
+            'completed': '<span class="badge bg-success work-badge">Выполнено</span>',
+            'delayed': '<span class="badge bg-danger work-badge">Задержка</span>',
+            'cancelled': '<span class="badge bg-dark work-badge">Отменено</span>'
+        };
+        return badges[status] || '';
+    }
+
+    function getStatusText(status) {
+        const texts = {
+            'new': 'Новая',
+            'inprogress': 'В работе',
+            'completed': 'Выполнено',
+            'delayed': 'Задержка',
+            'cancelled': 'Отменено'
+        };
+        return texts[status] || status;
+    }
+
+    function getProgressClass(status) {
+        const classes = {
+            'new': 'progress-new',
+            'inprogress': 'progress-inprogress',
+            'completed': 'progress-completed',
+            'delayed': 'progress-delayed',
+            'cancelled': 'progress-new'
+        };
+        return classes[status] || 'progress-new';
+    }
+
+    function getRiskColor(risk) {
+        const colors = {
+            'low': 'success',
+            'medium': 'warning',
+            'high': 'danger',
+            'critical': 'dark'
+        };
+        return colors[risk] || 'secondary';
+    }
+
+    function getRiskText(risk) {
+        const texts = {
+            'low': 'Низкий',
+            'medium': 'Средний',
+            'high': 'Высокий',
+            'critical': 'Критический'
+        };
+        return texts[risk] || risk;
+    }
+
+    function getPersonnelValue(personnelName) {
+        const personnelMap = {
+            'Аварийная бригада': 'emergency_team',
+            'Иванов А.П.': 'ivanov',
+            'Петрова С.И.': 'petrova',
+            'Сидоров В.М.': 'sidorov',
+            'Кузнецов Д.А.': 'kuznetsov',
+            'Васильев П.С.': 'vasiliev'
+        };
+        return personnelMap[personnelName] || '';
+    }
+
+    function showNotification(message, type) {
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+        notification.style.cssText = `
+            top: 20px;
+            right: 20px;
+            z-index: 1050;
+            min-width: 300px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        `;
+
+        notification.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 3000);
+    }
+
+    // Экспорт данных
+    function exportEmergencyData() {
+        const dataStr = JSON.stringify(unscheduledWorks, null, 2);
+        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+
+        const linkElement = document.createElement('a');
+        linkElement.setAttribute('href', dataUri);
+        linkElement.setAttribute('download', 'emergency-works.json');
+        linkElement.click();
+    }
+</script>

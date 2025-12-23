@@ -1,0 +1,84 @@
+﻿<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/WebApplication1.styles.css" asp-append-version="true" />
+</head>
+<body>
+    <!-- Мобильное меню вверху (только для мобильных устройств) -->
+    <header class="d-block d-lg-none">
+        <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom box-shadow">
+            <div class="container-fluid">
+                <a class="navbar-brand" asp-area="" asp-page="/Index">ЕВРАЗ</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mobileNavbar" aria-controls="mobileNavbar"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="mobileNavbar">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-page="/Planning">Планирование</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-page="/VPlanning">Внеплановые работы</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-page="/Reporting">Отчеты</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Левая навигационная панель (для десктопов) -->
+            <nav id="sidebar" class="col-lg-2 col-md-3 d-none d-lg-block sidebar bg-light border-end p-0">
+                <div class="sidebar-sticky">
+                    <div class="sidebar-header p-3 border-bottom">
+                        <h5><a class="text-decoration-none text-dark" asp-area="" asp-page="/Index">ЕВРАЗ</a></h5>
+                    </div>
+                    <ul class="nav flex-column mt-3">
+                        <li class="nav-item">
+                            <a class="nav-link text-dark py-2 px-3" asp-area="" asp-page="/Planning">
+                                <span class="me-2">📋</span> Планирование
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark py-2 px-3" asp-area="" asp-page="/VPlanning">
+                                <span class="me-2">⚠️</span> Внеплановые работы
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark py-2 px-3" asp-area="" asp-page="/Reporting">
+                                <span class="me-2">📊</span> Отчеты
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Основное содержимое -->
+            <main role="main" class="col-lg-10 col-md-9 ms-sm-auto px-4 py-3">
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+
+    <footer class="border-top footer text-muted mt-3">
+        <div class="container">
+            &copy; 2025 - Система планирования работ ОТиПБ - <a asp-area="" asp-page="/Privacy">Privacy</a>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

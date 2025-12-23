@@ -1,0 +1,53 @@
+﻿/* Стили для боковой навигации */
+.sidebar {
+    min-height: calc(100vh - 60px);
+    height: 100%;
+    position: sticky;
+    top: 0;
+}
+
+    .sidebar .nav-link {
+        border-radius: 0;
+        transition: all 0.3s;
+        border-left: 3px solid transparent;
+    }
+
+        .sidebar .nav-link:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+            border-left: 3px solid #007bff;
+        }
+
+        .sidebar .nav-link.active {
+            background-color: rgba(0, 123, 255, 0.1);
+            border-left: 3px solid #007bff;
+            font-weight: 500;
+        }
+
+/* Адаптивность */
+@media (max-width: 992px) {
+    .sidebar {
+        min-height: auto;
+        position: static;
+    }
+
+        .sidebar .nav-link {
+            border-left: none;
+            border-bottom: 2px solid transparent;
+        }
+
+            .sidebar .nav-link:hover {
+                border-left: none;
+                border-bottom: 2px solid #007bff;
+            }
+}
+
+/* Основное содержимое */
+main {
+    min-height: calc(100vh - 120px);
+}
+
+/* Футер */
+.footer {
+    background-color: #f8f9fa;
+    padding: 1rem 0;
+}
